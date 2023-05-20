@@ -1,6 +1,6 @@
 **LLVM_Optimized_AVX2:**
 
-Clang/LLVM built using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built. Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
+Clang/LLVM built for Ubuntu and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built. Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
 
 Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
@@ -36,7 +36,7 @@ https://github.com/microsoft/mimalloc
 
 Builds included in this repository are accomplished via the modified build script and the following options:
 
-vpython3 depot_tools/chromium/src/tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
+vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
 
 ****
 
