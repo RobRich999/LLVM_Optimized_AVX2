@@ -12,7 +12,7 @@ The binary builds included in this repository are accomplished under Kubuntu 23.
 
 vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usretc
 
-To keep download sizes reasonable, these binary builds represent a subset of larger LLVM build checkouts and include the basic tools (Clang, LLD, etc.) needed for accomplishing a release build of the Chromium web browser.
+Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
 
 ----
 
