@@ -33,3 +33,8 @@ https://github.com/microsoft/mimalloc
 Builds included in this repository are accomplished via the modified build script and the following options:
 
 vpython3 depot_tools/chromium/src/tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
+
+
+****
+
+<sub>*Typical third-party build disclaimer. No warranties. No guarantees. Your mileage may vary. Use at your own risk.*</sub>
