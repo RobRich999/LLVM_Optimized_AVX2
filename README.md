@@ -1,4 +1,4 @@
-# LLVM_Optimized_AVX2
+**LLVM_Optimized_AVX2:**
 
 Clang/LLVM built using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built. Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
 
@@ -24,6 +24,10 @@ Building LLVM with ThinLTO, PGO, and BOLT optimizations are optional. Regardless
 
 PGO and BOLT are not too LLVM build time intensive for a relatively fast system and/or lots of cores. ThinLTO can incur dramatically increased LLVM build times.
 
+****
+
+**Note regarding mimalloc:**
+
 Note a local build of the mimalloc allocator is pulled into the LLVM build script as a replacement for the standard Linux malloc allocator. Those using the modified script will need to obtain and build mimalloc, then update the path to libmimalloc.a in the script accordingly. Otherwise libmimalloc.a can be removed the linker directives if preferred.
 
 https://github.com/microsoft/mimalloc
@@ -33,7 +37,6 @@ https://github.com/microsoft/mimalloc
 Builds included in this repository are accomplished via the modified build script and the following options:
 
 vpython3 depot_tools/chromium/src/tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
-
 
 ****
 
