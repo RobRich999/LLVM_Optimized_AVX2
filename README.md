@@ -3,7 +3,7 @@
 Clang/LLVM built for Ubuntu 23.04 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
 
 ----
-0
+
 **Link to latest release build:**
 
 https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-r068e988-linux64-avx2
