@@ -3,16 +3,16 @@
 Clang/LLVM built for Ubuntu 23.04 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
 
 ----
-
+0
 **Link to latest release build:**
 
 https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-r068e988-linux64-avx2
 
 The binary builds included in this repository are accomplished under Kubuntu 23.04 (Lunar Lobster) via the modified build script and the following options:
 
-vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
+vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usretc
 
-To keep download sizes reasonable, these binary builds represent a subset of larger LLVM build checkouts and include the basic tools needed for accomplishing a release build of the Chromium web browser.
+To keep download sizes reasonable, these binary builds represent a subset of larger LLVM build checkouts and include the basic tools (Clang, LLD, etc.) needed for accomplishing a release build of the Chromium web browser.
 
 ----
 
