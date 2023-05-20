@@ -1,6 +1,14 @@
 **LLVM_Optimized_AVX2:**
 
-Clang/LLVM built for Ubuntu and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built. Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
+Clang/LLVM built for Ubuntu 23.04 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
+
+----
+
+**Link to latest release build:**
+
+https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/download/llvm-r068e988-linux64-avx2/llvm-r068e988-linux64-avx2.tar.xz
+
+----
 
 Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
@@ -15,6 +23,8 @@ Use --without-android and --without-fuchsia to skip downloading the ARM sysroots
 Use --x86-only to skip building LLVM support for various other architectures.
 
 Use --without-clang-extra to disable building extra clang tools. These are not required for my Chromium release builds. YMMV for other build types.
+
+Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
 
 Usage example from the /chromium/src directory:
 
@@ -31,6 +41,8 @@ PGO and BOLT are not too LLVM build time intensive for a relatively fast system 
 Note a local build of the mimalloc allocator is pulled into the LLVM build script as a replacement for the standard Linux malloc allocator. Those using the modified script will need to obtain and build mimalloc, then update the path to libmimalloc.a in the script accordingly. Otherwise libmimalloc.a can be removed the linker directives if preferred.
 
 https://github.com/microsoft/mimalloc
+
+Future script modifications are planned to enable or disable mimalloc integration via a build-time conditional option.
 
 ----
 
