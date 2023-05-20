@@ -34,7 +34,9 @@ https://github.com/microsoft/mimalloc
 
 ----
 
-Builds included in this repository are accomplished via the modified build script and the following options:
+**Note regarding repo binary builds:**
+
+Binary builds included in this repository are accomplished under Kubuntu 23.04 (Lunar Lobster) via the modified build script and the following options:
 
 vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
 
