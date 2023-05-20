@@ -10,6 +10,8 @@ https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-r068e988-lin
 
 ----
 
+**Script modifications and details:**
+
 Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
 git apply /path/to/llvm.patch
