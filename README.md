@@ -20,7 +20,7 @@ Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, t
 
 Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
-git apply /path/to/llvm.patch
+git apply /path/to/llvm-avx2.patch
 
 All builds are bootstrapped. There is no need to pass the --bootstrap option, which will now error.
 
