@@ -473,8 +473,8 @@ index bed534ad2df5d..ab12373042410 100755
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
-+    cmake_args.append( '-DCMAKE_C_FLAGS=-fmerge-all-constants -fdata-section -ffunction-sections -mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cflags) )
-+    cmake_args.append( '-DCMAKE_CXX_FLAGS=-fmerge-all-constants -fdata-section -ffunction-sections -mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cxxflags) )
++    bolt_train_cmake_args.append( '-DCMAKE_C_FLAGS=-fmerge-all-constants -fdata-section -ffunction-sections -mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cflags) )
++    bolt_train_cmake_args.append( '-DCMAKE_CXX_FLAGS=-fmerge-all-constants -fdata-section -ffunction-sections -mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cxxflags) )
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
