@@ -98,7 +98,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 -    U = toolchain_bucket + toolchain_hash + '/' + toolchain_name + '.tar.xz'
 -    sysroot_arm64 = os.path.join(LLVM_BUILD_TOOLS_DIR, toolchain_name)
 -    DownloadAndUnpack(U, sysroot_arm64)
-+     if args.with_android or args.with_fuchsia:
++    if args.with_android or args.with_fuchsia:
 +      # arm
 +      # hash from https://chromium-review.googlesource.com/c/chromium/src//3684954/1/build/linux/sysroot_scripts/sysroots.json#8
 +      toolchain_hash = '0b9a3c54d2d5f6b1a428369aaa8d7ba7b227f701'
