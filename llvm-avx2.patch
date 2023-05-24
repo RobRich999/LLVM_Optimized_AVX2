@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index bdcbed12d38f6..96bc1a1c0592b 100755
+index bdcbed12d38f6..9fe63bdd225db 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -366,6 +366,10 @@ def BuildLibXml2():
@@ -13,16 +13,18 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
            '..',
        ],
        msvc_arch='x64')
-@@ -522,8 +526,6 @@ def gn_arg(v):
+@@ -522,8 +526,8 @@ def gn_arg(v):
  
  def main():
    parser = argparse.ArgumentParser(description='Build Clang.')
 -  parser.add_argument('--bootstrap', action='store_true',
 -                      help='first build clang with CC, then with itself.')
++  # parser.add_argument('--bootstrap', action='store_true',
++  #                     help='first build clang with CC, then with itself.')
    parser.add_argument('--build-mac-arm', action='store_true',
                        help='Build arm binaries. Only valid on macOS.')
    parser.add_argument('--disable-asserts', action='store_true',
-@@ -594,13 +596,17 @@ def main():
+@@ -594,13 +598,17 @@ def main():
                        help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
                        dest='with_fuchsia',
                        default=sys.platform in ('linux2', 'darwin'))
@@ -43,7 +45,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
      print('The Android NDK is needed to build a Clang whose -fsanitize=address')
-@@ -681,18 +687,23 @@ def main():
+@@ -681,12 +689,19 @@ def main():
    # LLVM_ENABLE_LLD).
    cc, cxx, lld = None, None, None
  
@@ -53,29 +55,22 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
 +  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  ldflags = [ '-fuse-ld=lld -Wl,--threads=8 -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state' ]
-+
+ 
+-  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
+-  projects = 'clang;lld;clang-tools-extra'
 +  if args.x86_only:
 +    targets = 'X86'
 +  else:
 +    targets = 'AArch64;ARM;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
- 
--  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
--  projects = 'clang;lld;clang-tools-extra'
++
 +  if args.without_clang_extra:
 +    projects = 'clang;lld;polly'
 +  else:
 +    projects = 'clang;lld;clang-tools-extra;polly'
-+  
    if args.bolt:
      projects += ';bolt'
  
--  pic_default = sys.platform == 'win32'
--  pic_mode = 'ON' if args.pic or pic_default else 'OFF'
--
-   base_cmake_args = [
-       '-GNinja',
-       '-DCMAKE_BUILD_TYPE=Release',
-@@ -700,7 +711,7 @@ def main():
+@@ -700,7 +715,7 @@ def main():
        '-DLLVM_ENABLE_PROJECTS=' + projects,
        '-DLLVM_ENABLE_RUNTIMES=compiler-rt',
        '-DLLVM_TARGETS_TO_BUILD=' + targets,
@@ -84,7 +79,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
        '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
-@@ -790,21 +801,23 @@ def main():
+@@ -790,21 +805,23 @@ def main():
      sysroot_i386 = os.path.join(LLVM_BUILD_TOOLS_DIR, toolchain_name)
      DownloadAndUnpack(U, sysroot_i386)
  
@@ -103,7 +98,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
 -    U = toolchain_bucket + toolchain_hash + '/' + toolchain_name + '.tar.xz'
 -    sysroot_arm64 = os.path.join(LLVM_BUILD_TOOLS_DIR, toolchain_name)
 -    DownloadAndUnpack(U, sysroot_arm64)
-+    if args.with_android or args.with_fuchsia:
++     if args.with_android or args.with_fuchsia:
 +      # arm
 +      # hash from https://chromium-review.googlesource.com/c/chromium/src//3684954/1/build/linux/sysroot_scripts/sysroots.json#8
 +      toolchain_hash = '0b9a3c54d2d5f6b1a428369aaa8d7ba7b227f701'
@@ -123,7 +118,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
  
      # Add the sysroot to base_cmake_args.
      if platform.machine() == 'aarch64':
-@@ -840,79 +853,89 @@ def main():
+@@ -840,79 +857,89 @@ def main():
    cflags += libxml_cflags
    cxxflags += libxml_cflags
  
@@ -247,7 +242,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
 +  if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
 +  if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
 +  RunCommand(['cmake'] + bootstrap_args + [os.path.join(LLVM_DIR, 'llvm')],
-+         msvc_arch='x64')
++             msvc_arch='x64')
 +  RunCommand(['ninja'], msvc_arch='x64')
 +  if args.run_tests:
 +    RunCommand(['ninja', 'check-all'], msvc_arch='x64')
@@ -283,7 +278,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
  
    if args.pgo:
      print('Building instrumented compiler')
-@@ -922,9 +945,9 @@ def main():
+@@ -922,9 +949,9 @@ def main():
      os.chdir(LLVM_INSTRUMENTED_DIR)
  
      instrument_args = base_cmake_args + [
@@ -296,7 +291,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -967,8 +990,12 @@ def main():
+@@ -967,8 +994,12 @@ def main():
      with open(training_source, 'wb') as f:
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
@@ -311,7 +306,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
      RunCommand(train_cmd, msvc_arch='x64')
-@@ -1017,11 +1044,6 @@ def main():
+@@ -1017,11 +1048,6 @@ def main():
    if lld is not None: base_cmake_args.append('-DCMAKE_LINKER=' + lld)
    final_install_dir = args.install_dir if args.install_dir else LLVM_BUILD_DIR
    cmake_args = base_cmake_args + [
@@ -323,7 +318,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1034,7 +1056,19 @@ def main():
+@@ -1034,7 +1060,19 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
@@ -344,7 +339,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1084,27 +1118,35 @@ def main():
+@@ -1084,27 +1122,35 @@ def main():
           compiler_rt_cmake_flags(sanitizers=True, profile=True) + [
               'CMAKE_SYSROOT=%s' % sysroot_amd64,
           ]))
@@ -401,7 +396,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
          ]))
    elif sys.platform == 'win32':
      sysroot = os.path.dirname(os.path.dirname(GetWinSDKDir()))
-@@ -1216,26 +1258,27 @@ def main():
+@@ -1216,26 +1262,27 @@ def main():
    # will be created which contains the necessary source files for compilation.
    # MLGO is only officially supported on linux. This condition is checked at
    # the top of main()
@@ -449,7 +444,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
  
    # Convert FOO=BAR CMake flags per triple into
    # -DBUILTINS_$triple_FOO=BAR/-DRUNTIMES_$triple_FOO=BAR and build up
-@@ -1276,7 +1319,7 @@ def main():
+@@ -1276,7 +1323,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -458,7 +453,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1292,8 +1335,6 @@ def main():
+@@ -1292,8 +1339,6 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -467,7 +462,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1305,6 +1346,8 @@ def main():
+@@ -1305,6 +1350,8 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -476,7 +471,7 @@ index bdcbed12d38f6..96bc1a1c0592b 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1321,9 +1364,14 @@ def main():
+@@ -1321,9 +1368,14 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
