@@ -6,7 +6,7 @@ Clang/LLVM built for Ubuntu 23.04 and similar platforms using a modified Chromiu
 
 **Link to latest release build:**
 
-https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-r068e988-linux64-avx2
+https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-r62dc3ba-linux64-avx2
 
 The binary builds included in this repository are accomplished under Kubuntu 23.04 (Lunar Lobster) via the modified build script and the following options:
 
