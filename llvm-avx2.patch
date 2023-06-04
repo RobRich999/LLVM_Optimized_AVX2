@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 80abda0c1f5ba..f2e9cb2056190 100755
+index 80abda0c1f5ba..5092bc6f6657c 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -367,6 +367,10 @@ def BuildLibXml2():
@@ -361,7 +361,7 @@ index 80abda0c1f5ba..f2e9cb2056190 100755
 +    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting -Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
 +    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting -Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
 +    if args.pgo:
-+          cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
++      cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
 +  else:
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cxxflags) )
