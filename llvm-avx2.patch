@@ -1,8 +1,8 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index bdcbed12d38f6..9fe63bdd225db 100755
+index 80abda0c1f5ba..3bfdc9d56c166 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -366,6 +366,10 @@ def BuildLibXml2():
+@@ -367,6 +367,10 @@ def BuildLibXml2():
            '-DLIBXML2_WITH_XPATH=OFF',
            '-DLIBXML2_WITH_XPTR=OFF',
            '-DLIBXML2_WITH_ZLIB=OFF',
@@ -13,7 +13,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
            '..',
        ],
        msvc_arch='x64')
-@@ -522,8 +526,8 @@ def gn_arg(v):
+@@ -533,8 +537,8 @@ def gn_arg(v):
  
  def main():
    parser = argparse.ArgumentParser(description='Build Clang.')
@@ -24,14 +24,15 @@ index bdcbed12d38f6..9fe63bdd225db 100755
    parser.add_argument('--build-mac-arm', action='store_true',
                        help='Build arm binaries. Only valid on macOS.')
    parser.add_argument('--disable-asserts', action='store_true',
-@@ -594,13 +598,17 @@ def main():
-                       help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
-                       dest='with_fuchsia',
-                       default=sys.platform in ('linux2', 'darwin'))
+@@ -608,14 +612,18 @@ def main():
+   parser.add_argument('--with-goma',
+                       action='store_true',
+                       help='Use goma to build the stage 1 compiler')
 +  parser.add_argument('--x86-only', action='store_true',
 +                      help='Only build x86 runtimes.')
 +  parser.add_argument('--without-clang-extra', action='store_true',
 +                      help='Disables extra clang tools.')
+ 
    args = parser.parse_args()
  
    global CLANG_REVISION, PACKAGE_VERSION, LLVM_BUILD_DIR
@@ -45,7 +46,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
      print('The Android NDK is needed to build a Clang whose -fsanitize=address')
-@@ -681,12 +689,19 @@ def main():
+@@ -696,12 +704,20 @@ def main():
    # LLVM_ENABLE_LLD).
    cc, cxx, lld = None, None, None
  
@@ -55,9 +56,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 +  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  ldflags = [ '-fuse-ld=lld -Wl,--threads=8 -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state' ]
- 
--  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
--  projects = 'clang;lld;clang-tools-extra'
++ 
 +  if args.x86_only:
 +    targets = 'X86'
 +  else:
@@ -67,10 +66,13 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 +    projects = 'clang;lld;polly'
 +  else:
 +    projects = 'clang;lld;clang-tools-extra;polly'
+ 
+-  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
+-  projects = 'clang;lld;clang-tools-extra'
    if args.bolt:
      projects += ';bolt'
  
-@@ -700,7 +715,7 @@ def main():
+@@ -715,7 +731,7 @@ def main():
        '-DLLVM_ENABLE_PROJECTS=' + projects,
        '-DLLVM_ENABLE_RUNTIMES=compiler-rt',
        '-DLLVM_TARGETS_TO_BUILD=' + targets,
@@ -79,7 +81,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
        '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
-@@ -790,21 +805,23 @@ def main():
+@@ -811,21 +827,23 @@ def main():
      sysroot_i386 = os.path.join(LLVM_BUILD_TOOLS_DIR, toolchain_name)
      DownloadAndUnpack(U, sysroot_i386)
  
@@ -118,7 +120,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
  
      # Add the sysroot to base_cmake_args.
      if platform.machine() == 'aarch64':
-@@ -840,79 +857,89 @@ def main():
+@@ -861,79 +879,89 @@ def main():
    cflags += libxml_cflags
    cxxflags += libxml_cflags
  
@@ -142,7 +144,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 -    if sys.platform == 'darwin':
 -      # Need ARM and AArch64 for building the ios clang_rt.
 -      bootstrap_targets += ';ARM;AArch64'
--    bootstrap_args = base_cmake_args + [
+-    bootstrap_args = base_cmake_args + goma_cmake_args + [
 -        '-DLLVM_TARGETS_TO_BUILD=' + bootstrap_targets,
 -        '-DLLVM_ENABLE_PROJECTS=clang;lld',
 -        '-DLLVM_ENABLE_RUNTIMES=' + ';'.join(runtimes),
@@ -170,6 +172,16 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 -        bootstrap_args.extend(['-DDARWIN_osx_ARCHS=arm64'])
 -      else:
 -        bootstrap_args.extend(['-DDARWIN_osx_ARCHS=x86_64'])
+-
+-    if cc is not None:  bootstrap_args.append('-DCMAKE_C_COMPILER=' + cc)
+-    if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
+-    if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
+-    RunCommand(['cmake'] + bootstrap_args + [os.path.join(LLVM_DIR, 'llvm')],
+-               msvc_arch='x64')
+-    RunCommand(['ninja'] + goma_ninja_args, msvc_arch='x64')
+-    if args.run_tests:
+-      RunCommand(['ninja', 'check-all'], msvc_arch='x64')
+-    RunCommand(['ninja', 'install'], msvc_arch='x64')
 +  print('Building bootstrap compiler')
 +  if os.path.exists(LLVM_BOOTSTRAP_DIR):
 +    RmTree(LLVM_BOOTSTRAP_DIR)
@@ -228,16 +240,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
 +    bootstrap_args.extend(['-DDARWIN_osx_ARCHS=arm64'])
 +  else:
 +    bootstrap_args.extend(['-DDARWIN_osx_ARCHS=x86_64'])
- 
--    if cc is not None:  bootstrap_args.append('-DCMAKE_C_COMPILER=' + cc)
--    if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
--    if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
--    RunCommand(['cmake'] + bootstrap_args + [os.path.join(LLVM_DIR, 'llvm')],
--               msvc_arch='x64')
--    RunCommand(['ninja'], msvc_arch='x64')
--    if args.run_tests:
--      RunCommand(['ninja', 'check-all'], msvc_arch='x64')
--    RunCommand(['ninja', 'install'], msvc_arch='x64')
++
 +  if cc is not None:  bootstrap_args.append('-DCMAKE_C_COMPILER=' + cc)
 +  if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
 +  if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
@@ -278,7 +281,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
  
    if args.pgo:
      print('Building instrumented compiler')
-@@ -922,9 +949,9 @@ def main():
+@@ -943,9 +971,9 @@ def main():
      os.chdir(LLVM_INSTRUMENTED_DIR)
  
      instrument_args = base_cmake_args + [
@@ -291,7 +294,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -967,8 +994,12 @@ def main():
+@@ -988,8 +1016,12 @@ def main():
      with open(training_source, 'wb') as f:
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
@@ -306,7 +309,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
      RunCommand(train_cmd, msvc_arch='x64')
-@@ -1017,11 +1048,6 @@ def main():
+@@ -1038,11 +1070,6 @@ def main():
    if lld is not None: base_cmake_args.append('-DCMAKE_LINKER=' + lld)
    final_install_dir = args.install_dir if args.install_dir else LLVM_BUILD_DIR
    cmake_args = base_cmake_args + [
@@ -318,28 +321,28 @@ index bdcbed12d38f6..9fe63bdd225db 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1034,7 +1060,19 @@ def main():
+@@ -1055,7 +1082,19 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
 -    cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append( '-DLLVM_ENABLE_LTO=Thin' )
 +    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=16' )
-+    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cflags) )
-+    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cxxflags) )
-+    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fsplit-lto-unit -fwhole-program-vtables ' + ' '.join(cflags) )
++    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fsplit-lto-unit -fwhole-program-vtables ' + ' '.join(cxxflags) )
++    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting -Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting -Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting -Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
 +  else:
-+    cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cflags) )
-+    cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cxxflags) )
++    cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting -mllvm -enable-ext-tsp-block-placement=1 ' + ' '.join(cflags) )
++    cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting -mllvm -enable-ext-tsp-block-placement=1 ' + ' '.join(cxxflags) )
 +    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags) )
 +    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags) )
 +    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags) )
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1084,27 +1122,35 @@ def main():
+@@ -1105,27 +1144,35 @@ def main():
           compiler_rt_cmake_flags(sanitizers=True, profile=True) + [
               'CMAKE_SYSROOT=%s' % sysroot_amd64,
           ]))
@@ -396,7 +399,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
          ]))
    elif sys.platform == 'win32':
      sysroot = os.path.dirname(os.path.dirname(GetWinSDKDir()))
-@@ -1216,26 +1262,27 @@ def main():
+@@ -1237,26 +1284,27 @@ def main():
    # will be created which contains the necessary source files for compilation.
    # MLGO is only officially supported on linux. This condition is checked at
    # the top of main()
@@ -444,7 +447,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
  
    # Convert FOO=BAR CMake flags per triple into
    # -DBUILTINS_$triple_FOO=BAR/-DRUNTIMES_$triple_FOO=BAR and build up
-@@ -1276,7 +1323,7 @@ def main():
+@@ -1302,7 +1350,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -453,7 +456,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1292,8 +1339,6 @@ def main():
+@@ -1318,8 +1366,6 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -462,7 +465,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1305,6 +1350,8 @@ def main():
+@@ -1331,6 +1377,8 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -471,7 +474,7 @@ index bdcbed12d38f6..9fe63bdd225db 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1321,9 +1368,14 @@ def main():
+@@ -1347,9 +1395,14 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
