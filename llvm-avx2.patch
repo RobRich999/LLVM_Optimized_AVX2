@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 80abda0c1f5ba..3bfdc9d56c166 100755
+index 80abda0c1f5ba..5732003da3cc6 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -367,6 +367,10 @@ def BuildLibXml2():
@@ -24,10 +24,16 @@ index 80abda0c1f5ba..3bfdc9d56c166 100755
    parser.add_argument('--build-mac-arm', action='store_true',
                        help='Build arm binaries. Only valid on macOS.')
    parser.add_argument('--disable-asserts', action='store_true',
-@@ -608,14 +612,18 @@ def main():
-   parser.add_argument('--with-goma',
-                       action='store_true',
-                       help='Use goma to build the stage 1 compiler')
+@@ -605,17 +609,21 @@ def main():
+                       help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
+                       dest='with_fuchsia',
+                       default=sys.platform in ('linux2', 'darwin'))
+-  parser.add_argument('--with-goma',
+-                      action='store_true',
+-                      help='Use goma to build the stage 1 compiler')
++  # parser.add_argument('--with-goma',
++  #                     action='store_true',
++  #                     help='Use goma to build the stage 1 compiler')
 +  parser.add_argument('--x86-only', action='store_true',
 +                      help='Only build x86 runtimes.')
 +  parser.add_argument('--without-clang-extra', action='store_true',
@@ -81,6 +87,27 @@ index 80abda0c1f5ba..3bfdc9d56c166 100755
        '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
+@@ -752,13 +768,13 @@ def main():
+   cflags += sanitizers_override
+   cxxflags += sanitizers_override
+ 
+-  goma_cmake_args = []
+-  goma_ninja_args = []
+-  if args.with_goma:
+-    goma_path = StartGomaAndGetGomaCCPath()
+-    goma_cmake_args.append('-DCMAKE_C_COMPILER_LAUNCHER=' + goma_path)
+-    goma_cmake_args.append('-DCMAKE_CXX_COMPILER_LAUNCHER=' + goma_path)
+-    goma_ninja_args = ['-j' + str(multiprocessing.cpu_count() * 50)]
++  # goma_cmake_args = []
++  # goma_ninja_args = []
++  # if args.with_goma:
++  #   goma_path = StartGomaAndGetGomaCCPath()
++  #   goma_cmake_args.append('-DCMAKE_C_COMPILER_LAUNCHER=' + goma_path)
++  #   goma_cmake_args.append('-DCMAKE_CXX_COMPILER_LAUNCHER=' + goma_path)
++  #   goma_ninja_args = ['-j' + str(multiprocessing.cpu_count() * 50)]
+ 
+   if args.host_cc or args.host_cxx:
+     assert args.host_cc and args.host_cxx, \
 @@ -811,21 +827,23 @@ def main():
      sysroot_i386 = os.path.join(LLVM_BUILD_TOOLS_DIR, toolchain_name)
      DownloadAndUnpack(U, sysroot_i386)
@@ -447,6 +474,17 @@ index 80abda0c1f5ba..3bfdc9d56c166 100755
  
    # Convert FOO=BAR CMake flags per triple into
    # -DBUILTINS_$triple_FOO=BAR/-DRUNTIMES_$triple_FOO=BAR and build up
+@@ -1277,8 +1325,8 @@ def main():
+ 
+   # If we're bootstrapping, Goma doesn't know about the bootstrap compiler
+   # we're using as the host compiler.
+-  if not args.bootstrap:
+-    cmake_args.extend(goma_cmake_args)
++  # if not args.bootstrap:
++  #   cmake_args.extend(goma_cmake_args)
+ 
+   if os.path.exists(LLVM_BUILD_DIR):
+     RmTree(LLVM_BUILD_DIR)
 @@ -1302,7 +1350,7 @@ def main():
      # Instrument.
      RunCommand([
