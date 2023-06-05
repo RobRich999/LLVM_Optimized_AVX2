@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 80abda0c1f5ba..fb65049761305 100755
+index 80abda0c1f5ba..dad20e483873f 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -367,6 +367,10 @@ def BuildLibXml2():
@@ -62,7 +62,7 @@ index 80abda0c1f5ba..fb65049761305 100755
 +  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  ldflags = [ '-fuse-ld=lld -Wl,--threads=8 -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state' ]
-+ 
++
 +  if args.x86_only:
 +    targets = 'X86'
 +  else:
@@ -348,7 +348,7 @@ index 80abda0c1f5ba..fb65049761305 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1055,7 +1082,23 @@ def main():
+@@ -1055,7 +1082,24 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
@@ -366,14 +366,15 @@ index 80abda0c1f5ba..fb65049761305 100755
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -polly -mllvm -polly-invariant-load-hoisting ' + ' '.join(cxxflags) )
 +    if args.pgo:
-+      cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement=1 ' + ' '.join(cxxflags) )  
++      cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement=1 ' + ' '.join(cxxflags) )
++      cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement=1 ' + ' '.join(cxxflags) )
 +    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags) )
 +    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags) )
 +    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags) )
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1105,27 +1148,35 @@ def main():
+@@ -1105,27 +1149,35 @@ def main():
           compiler_rt_cmake_flags(sanitizers=True, profile=True) + [
               'CMAKE_SYSROOT=%s' % sysroot_amd64,
           ]))
@@ -430,7 +431,7 @@ index 80abda0c1f5ba..fb65049761305 100755
          ]))
    elif sys.platform == 'win32':
      sysroot = os.path.dirname(os.path.dirname(GetWinSDKDir()))
-@@ -1237,26 +1288,27 @@ def main():
+@@ -1237,26 +1289,27 @@ def main():
    # will be created which contains the necessary source files for compilation.
    # MLGO is only officially supported on linux. This condition is checked at
    # the top of main()
@@ -478,7 +479,7 @@ index 80abda0c1f5ba..fb65049761305 100755
  
    # Convert FOO=BAR CMake flags per triple into
    # -DBUILTINS_$triple_FOO=BAR/-DRUNTIMES_$triple_FOO=BAR and build up
-@@ -1277,8 +1329,8 @@ def main():
+@@ -1277,8 +1330,8 @@ def main():
  
    # If we're bootstrapping, Goma doesn't know about the bootstrap compiler
    # we're using as the host compiler.
@@ -489,7 +490,7 @@ index 80abda0c1f5ba..fb65049761305 100755
  
    if os.path.exists(LLVM_BUILD_DIR):
      RmTree(LLVM_BUILD_DIR)
-@@ -1288,7 +1340,8 @@ def main():
+@@ -1288,7 +1341,8 @@ def main():
               msvc_arch='x64',
               env=deployment_env)
    CopyLibstdcpp(args, LLVM_BUILD_DIR)
@@ -499,7 +500,7 @@ index 80abda0c1f5ba..fb65049761305 100755
  
    if chrome_tools:
      # If any Chromium tools were built, install those now.
-@@ -1302,7 +1355,7 @@ def main():
+@@ -1302,7 +1356,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -508,7 +509,7 @@ index 80abda0c1f5ba..fb65049761305 100755
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1318,8 +1371,6 @@ def main():
+@@ -1318,8 +1372,6 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -517,7 +518,7 @@ index 80abda0c1f5ba..fb65049761305 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1331,6 +1382,8 @@ def main():
+@@ -1331,6 +1383,8 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -526,7 +527,7 @@ index 80abda0c1f5ba..fb65049761305 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1347,9 +1400,14 @@ def main():
+@@ -1347,9 +1401,14 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
