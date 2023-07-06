@@ -46,4 +46,12 @@ Future script modifications are planned to enable or disable mimalloc integratio
 
 ****
 
+**Note regarding Windows cross-building:**
+
+The release builds include the needed compiler-rt libraries to support the Linux cross-building of Chromium for Windows.
+
+If using the build script, the LLVM lib/clang/17/lib/windows/ library files will need to be copied manually from the LLVM package bundled by Chromium. Future script modications are planned to hopefully mitigate this annoyance.
+
+****
+
 <sub>*Typical third-party build disclaimer. No warranties. No guarantees. Your mileage may vary. Use at your own risk.*</sub>
