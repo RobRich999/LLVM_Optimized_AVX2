@@ -28,15 +28,9 @@ LLVM is built with -march=x86-64-v3 and other optimizations. Optimizations have 
 
 Use --without-android and --without-fuchsia to skip downloading the ARM sysroots.
 
-Use --x86-only to skip building LLVM support for various other architectures.
-
-Use --without-clang-extra to disable building extra clang tools. These are not required for my Chromium release builds. YMMV for other build types.
-
-Conditionals have been included for other architectures and LLVM projects, but they are unsupported and remain untested at this time.
-
 Usage example from the /chromium/src directory:
 
-vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra
+vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Building LLVM with ThinLTO, PGO, and BOLT optimizations are optional. Regardless, LLLVM still builds with optimizations for -O3, -march=x86-64-v3, Polly, etc.
 
