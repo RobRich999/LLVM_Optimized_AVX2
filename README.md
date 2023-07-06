@@ -10,7 +10,7 @@ https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v17-r08be779
 
 The binary builds included in this repository are accomplished under Kubuntu 23.04 (Lunar Lobster) via the modified build script and the following options:
 
-vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision --x86-only --without-clang-extra --host-cc=/usr/lib/llvm-17/bin/clang --host-cxx=/usr/lib/llvm-17/bin/clang++ --gcc-toolchain=/usr
+vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
 
