@@ -1,12 +1,12 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index f2d4ac244892b..b622d860d27af 100755
+index f2d4ac244892b..d8efef76e1e4a 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -365,6 +365,10 @@ def BuildLibXml2():
            '-DLIBXML2_WITH_XPATH=OFF',
            '-DLIBXML2_WITH_XPTR=OFF',
            '-DLIBXML2_WITH_ZLIB=OFF',
-+          '-DCMAKE_C_FLAGS_RELEASE=-O2 -DNDEBUG -w -march=x86-64-v3 -fipa-pta -fgraphite-identity -floop-nest-optimize -pipe',
++          '-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -w -march=x86-64-v3 -fipa-pta -fgraphite-identity -floop-nest-optimize -pipe',
 +          '-DCMAKE_EXE_LINKER_FLAGS=-Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
 +          '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
 +          '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
@@ -68,8 +68,8 @@ index f2d4ac244892b..b622d860d27af 100755
 -  cflags = []
 -  cxxflags = []
 -  ldflags = []
-+  cflags = [ '-O2 -DNDEBUG -w -march=x86-64-v3' ]
-+  cxxflags = [ '-O2 -DNDEBUG -w -march=x86-64-v3' ]
++  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
++  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3' ]
 +  ldflags = [ '-fuse-ld=lld -Wl,--threads=8 -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state' ]
  
    targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
@@ -285,7 +285,7 @@ index f2d4ac244892b..b622d860d27af 100755
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
 -                '-target', 'x86_64-unknown-unknown', '-O2', '-g', '-std=c++14',
 -                 '-fno-exceptions', '-fno-rtti', '-w', '-c', training_source]
-+                '-target', 'x86_64-unknown-unknown', '-O2',
++                '-target', 'x86_64-unknown-unknown', '-O3',
 +                '-march=x86-64-v3',
 +                '-fmerge-all-constants', '-fdata-sections', '-ffunction-sections',
 +                '-mllvm', '-polly', '-mllvm', '-polly-invariant-load-hoisting',
@@ -315,9 +315,9 @@ index f2d4ac244892b..b622d860d27af 100755
 +    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=16' )
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cxxflags) )
-+    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O2 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O2 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O2 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
 +    if args.pgo:
 +      cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement=1 ' + ' '.join(ldflags) )
 +  else:
