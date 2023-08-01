@@ -73,7 +73,7 @@ index 248fb3d96b2ab..d2c26e3090530 100755
  
    targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
-+  projects = 'clang;lld;clang-tools-extra:polly'
++  projects = 'clang;lld;clang-tools-extra;polly'
    if args.bolt:
      projects += ';bolt'
  
