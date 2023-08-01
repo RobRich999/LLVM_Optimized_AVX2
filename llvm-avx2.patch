@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index f2d4ac244892b..d8efef76e1e4a 100755
+index 248fb3d96b2ab..d2c26e3090530 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -365,6 +365,10 @@ def BuildLibXml2():
@@ -31,7 +31,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
  def DownloadPinnedClang():
    PINNED_CLANG_VERSION = 'llvmorg-17-init-16420-g0c545a44-1'
    DownloadAndUnpackPackage('clang', PINNED_CLANG_DIR, GetDefaultHostOs(),
-@@ -531,8 +524,6 @@ def gn_arg(v):
+@@ -530,8 +523,6 @@ def gn_arg(v):
  
  def main():
    parser = argparse.ArgumentParser(description='Build Clang.')
@@ -40,7 +40,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
    parser.add_argument('--build-mac-arm', action='store_true',
                        help='Build arm binaries. Only valid on macOS.')
    parser.add_argument('--disable-asserts', action='store_true',
-@@ -603,17 +594,14 @@ def main():
+@@ -599,9 +590,6 @@ def main():
                        help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
                        dest='with_fuchsia',
                        default=sys.platform in ('linux2', 'darwin'))
@@ -50,18 +50,17 @@ index f2d4ac244892b..d8efef76e1e4a 100755
  
    args = parser.parse_args()
  
-   global CLANG_REVISION, PACKAGE_VERSION, LLVM_BUILD_DIR
+@@ -612,9 +600,6 @@ def main():
+     global RELEASE_VERSION
+     RELEASE_VERSION = '18'
  
 -  if (args.pgo or args.thinlto) and not args.bootstrap:
 -    print('--pgo/--thinlto requires --bootstrap')
 -    return 1
-+  # if (args.pgo or args.thinlto) and not args.bootstrap:
-+  #   print('--pgo/--thinlto requires --bootstrap')
-+  #   return 1
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
      print('The Android NDK is needed to build a Clang whose -fsanitize=address')
-@@ -694,12 +682,12 @@ def main():
+@@ -695,12 +680,12 @@ def main():
    # LLVM_ENABLE_LLD).
    cc, cxx, lld = None, None, None
  
@@ -74,20 +73,20 @@ index f2d4ac244892b..d8efef76e1e4a 100755
  
    targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
-+  projects = 'clang;lld;clang-tools-extra;polly'
++  projects = 'clang;lld;clang-tools-extra:polly'
    if args.bolt:
      projects += ';bolt'
  
-@@ -713,7 +701,7 @@ def main():
+@@ -714,7 +699,7 @@ def main():
        '-DLLVM_ENABLE_PROJECTS=' + projects,
        '-DLLVM_ENABLE_RUNTIMES=compiler-rt',
        '-DLLVM_TARGETS_TO_BUILD=' + targets,
 -      f'-DLLVM_ENABLE_PIC={pic_mode}',
 +      '-DLLVM_ENABLE_PIC=ON',
-       '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
-@@ -750,14 +738,6 @@ def main():
+       '-DCLANG_PLUGIN_SUPPORT=OFF',
+@@ -752,14 +737,6 @@ def main():
    cflags += sanitizers_override
    cxxflags += sanitizers_override
  
@@ -102,7 +101,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
    if args.host_cc or args.host_cxx:
      assert args.host_cc and args.host_cxx, \
             "--host-cc and --host-cxx need to be used together"
-@@ -859,79 +839,93 @@ def main():
+@@ -823,79 +800,92 @@ def main():
    cflags += libxml_cflags
    cxxflags += libxml_cflags
  
@@ -247,7 +246,8 @@ index f2d4ac244892b..d8efef76e1e4a 100755
 +  if args.run_tests:
 +    RunCommand(['ninja', 'check-all'], setenv=True)
 +  RunCommand(['ninja', 'install'], setenv=True)
-+
+ 
+-    print('Bootstrap compiler installed.')
 +  if sys.platform == 'win32':
 +    cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
 +    cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
@@ -260,13 +260,11 @@ index f2d4ac244892b..d8efef76e1e4a 100755
 +  else:
 +    cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang')
 +    cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang++')
- 
--    print('Bootstrap compiler installed.')
 +  print('Bootstrap compiler installed.')
  
    if args.pgo:
      print('Building instrumented compiler')
-@@ -941,9 +935,9 @@ def main():
+@@ -905,9 +895,9 @@ def main():
      os.chdir(LLVM_INSTRUMENTED_DIR)
  
      instrument_args = base_cmake_args + [
@@ -279,7 +277,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -986,8 +980,12 @@ def main():
+@@ -950,8 +940,12 @@ def main():
      with open(training_source, 'wb') as f:
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
@@ -294,7 +292,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
      RunCommand(train_cmd, setenv=True)
-@@ -1037,11 +1035,6 @@ def main():
+@@ -1001,11 +995,6 @@ def main():
    if lld is not None: base_cmake_args.append('-DCMAKE_LINKER=' + lld)
    final_install_dir = args.install_dir if args.install_dir else LLVM_BUILD_DIR
    cmake_args = base_cmake_args + [
@@ -306,7 +304,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1054,7 +1047,24 @@ def main():
+@@ -1018,7 +1007,24 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
@@ -332,7 +330,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1274,11 +1284,6 @@ def main():
+@@ -1294,11 +1300,6 @@ def main():
    cmake_args.append('-DLLVM_BUILTIN_TARGETS=' + all_triples)
    cmake_args.append('-DLLVM_RUNTIME_TARGETS=' + all_triples)
  
@@ -344,25 +342,25 @@ index f2d4ac244892b..d8efef76e1e4a 100755
    if os.path.exists(LLVM_BUILD_DIR):
      RmTree(LLVM_BUILD_DIR)
    EnsureDirExists(LLVM_BUILD_DIR)
-@@ -1287,7 +1292,7 @@ def main():
+@@ -1306,7 +1307,7 @@ def main():
+   RunCommand(['cmake'] + cmake_args + [os.path.join(LLVM_DIR, 'llvm')],
               setenv=True,
               env=deployment_env)
-   CopyLibstdcpp(args, LLVM_BUILD_DIR)
 -  RunCommand(['ninja'] + goma_ninja_args, setenv=True)
 +  RunCommand(['ninja'], setenv=True)
  
    if chrome_tools:
      # If any Chromium tools were built, install those now.
-@@ -1301,7 +1306,7 @@ def main():
+@@ -1320,7 +1321,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
 -        '-instrument', '--instrumentation-file-append-pid',
-+         '--lite=false', '-instrument', '--instrumentation-file-append-pid',
++        '--lite=false', '-instrument', '--instrumentation-file-append-pid',
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1317,8 +1322,6 @@ def main():
+@@ -1336,8 +1337,6 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -371,7 +369,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1330,6 +1333,8 @@ def main():
+@@ -1349,6 +1348,8 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -380,7 +378,7 @@ index f2d4ac244892b..d8efef76e1e4a 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1346,9 +1351,14 @@ def main():
+@@ -1365,9 +1366,14 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
