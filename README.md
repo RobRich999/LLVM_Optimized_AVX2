@@ -10,7 +10,7 @@ https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v18-r917574d
 
 The binary builds included in this repository are accomplished under Kubuntu 23.04 (Lunar Lobster) via the modified build script and the following options:
 
-vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
+vpython3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
 
@@ -22,13 +22,11 @@ Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
 git apply /path/to/llvm-avx2.patch
 
-All builds are bootstrapped. There is no need to pass the --bootstrap option, which will now error.
-
 LLVM is built with -march=x86-64-v3 and other optimizations. Optimizations have been carried down into the PGO, ThinLTO, and BOLT build options.
 
 Usage example from the /chromium/src directory:
 
-vpython3 tools/clang/scripts/build.py --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
+vpython3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Building LLVM with ThinLTO, PGO, and BOLT optimizations are optional. Regardless, LLLVM still builds with optimizations for -O3, -march=x86-64-v3, Polly, etc.
 
