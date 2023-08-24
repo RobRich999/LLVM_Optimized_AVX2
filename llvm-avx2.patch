@@ -1,64 +1,46 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 1abebf0092a49..03fd4169a158e 100755
+index 932bda5bb68c3..8f0da4db7c0f4 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -366,6 +366,10 @@ def BuildLibXml2():
+@@ -367,6 +367,10 @@ def BuildLibXml2():
            '-DLIBXML2_WITH_XPATH=OFF',
            '-DLIBXML2_WITH_XPTR=OFF',
            '-DLIBXML2_WITH_ZLIB=OFF',
 +          '-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -w -march=x86-64-v3 -ffp-contract=fast -fipa-pta -fgraphite-identity -floop-nest-optimize -pipe -fdata-sections -ffunction-sections ',
-+          '-DCMAKE_EXE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state ',
-+          '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state ',
-+          '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state ',
++          '-DCMAKE_EXE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
++          '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
++          '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
            '..',
        ],
        setenv=True)
-@@ -412,17 +416,6 @@ def DownloadRPMalloc():
-   rpmalloc_dir = rpmalloc_dir.replace('\\', '/')
-   return rpmalloc_dir
- 
--
--def StartGomaAndGetGomaCCPath():
--  bat_ext = '.bat' if sys.platform == 'win32' else ''
--  exe_ext = '.exe' if sys.platform == 'win32' else ''
--  subprocess.check_output(['goma_ctl' + bat_ext, 'ensure_start'])
--  return os.path.join(
--      subprocess.check_output(['goma_ctl' + bat_ext, 'goma_dir'],
--                              universal_newlines=True).rstrip(),
--      'gomacc' + exe_ext)
--
--
- def DownloadPinnedClang():
-   PINNED_CLANG_VERSION = 'llvmorg-17-init-16420-g0c545a44-1'
-   DownloadAndUnpackPackage('clang', PINNED_CLANG_DIR, GetDefaultHostOs(),
-@@ -531,8 +524,6 @@ def gn_arg(v):
- 
- def main():
-   parser = argparse.ArgumentParser(description='Build Clang.')
--  parser.add_argument('--bootstrap', action='store_true',
--                      help='first build clang with CC, then with itself.')
-   parser.add_argument('--build-mac-arm', action='store_true',
-                       help='Build arm binaries. Only valid on macOS.')
-   parser.add_argument('--disable-asserts', action='store_true',
-@@ -600,17 +591,11 @@ def main():
-                       help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
-                       dest='with_fuchsia',
-                       default=sys.platform in ('linux2', 'darwin'))
--  parser.add_argument('--with-goma',
--                      action='store_true',
--                      help='Use goma to build the stage 1 compiler')
- 
-   args = parser.parse_args()
- 
-   global CLANG_REVISION, PACKAGE_VERSION, LLVM_BUILD_DIR
+@@ -444,6 +448,11 @@ def BuildZStd():
+           '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64',
+           '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded',  # /MT to match LLVM.
+           '-DZSTD_BUILD_SHARED=OFF',
++          '-DCMAKE_C_FLAGS_RELEASE=-O3 -DNDEBUG -w -march=x86-64-v3 -ffp-contract=fast -fipa-pta -fgraphite-identity -floop-nest-optimize -pipe -fdata-sections -ffunction-sections ',
++          '-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG -w -march=x86-64-v3 -ffp-contract=fast -fipa-pta -fgraphite-identity -floop-nest-optimize -pipe -fdata-sections -ffunction-sections ',
++          '-DCMAKE_EXE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
++          '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
++          '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-O1 -Wl,--gc-sections -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state ',
+           '../build/cmake',
+       ],
+       setenv=True)
+@@ -712,9 +721,12 @@ def main():
+     global RELEASE_VERSION
+     RELEASE_VERSION = '18'
  
 -  if (args.pgo or args.thinlto) and not args.bootstrap:
 -    print('--pgo/--thinlto requires --bootstrap')
--    return 1
++  if not args.bootstrap:
++    print('Customized build script requires --bootstrap')
+     return 1
++  if args.with_goma:
++    print('Customized build script does not support --with-goma')
++    return 1  
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
      print('The Android NDK is needed to build a Clang whose -fsanitize=address')
-@@ -691,12 +676,12 @@ def main():
+@@ -795,14 +807,12 @@ def main():
    # LLVM_ENABLE_LLD).
    cc, cxx, lld = None, None, None
  
@@ -67,15 +49,17 @@ index 1abebf0092a49..03fd4169a158e 100755
 -  ldflags = []
 +  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3 -ffp-contract=fast -fmerge-all-constants -fdata-sections -ffunction-sections' ]
 +  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3 -ffp-contract=fast -fmerge-all-constants -fdata-sections -ffunction-sections' ]
-+  ldflags = [ '-fuse-ld=lld -Wl,--threads=8  -Wl,-mllvm,-instcombine-lower-dbg-declare=0 -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all -Wl,--as-needed -Wl,--push-state,/home/robrich/Downloads/mimalloc/build/libmimalloc.a,--pop-state' ]
++  ldflags = [ '-fuse-ld=lld -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all -Wl,--as-needed -Wl,--push-state,/mnt/raid0/source_builds/mimalloc/build/libmimalloc.a,--pop-state' ]
  
    targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
-+  projects = 'clang;lld;clang-tools-extra;polly'
-   if args.bolt:
-     projects += ';bolt'
+-  if args.bolt:
+-    projects += ';bolt'
++  projects = 'clang;lld;clang-tools-extra;polly;bolt'
  
-@@ -710,7 +695,7 @@ def main():
+   pic_default = sys.platform == 'win32'
+   pic_mode = 'ON' if args.pic or pic_default else 'OFF'
+@@ -814,7 +824,7 @@ def main():
        '-DLLVM_ENABLE_PROJECTS=' + projects,
        '-DLLVM_ENABLE_RUNTIMES=compiler-rt',
        '-DLLVM_TARGETS_TO_BUILD=' + targets,
@@ -84,45 +68,10 @@ index 1abebf0092a49..03fd4169a158e 100755
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
        '-DCLANG_PLUGIN_SUPPORT=OFF',
-@@ -748,14 +733,6 @@ def main():
-   cflags += sanitizers_override
-   cxxflags += sanitizers_override
- 
--  goma_cmake_args = []
--  goma_ninja_args = []
--  if args.with_goma:
--    goma_path = StartGomaAndGetGomaCCPath()
--    goma_cmake_args.append('-DCMAKE_C_COMPILER_LAUNCHER=' + goma_path)
--    goma_cmake_args.append('-DCMAKE_CXX_COMPILER_LAUNCHER=' + goma_path)
--    goma_ninja_args = ['-j' + str(multiprocessing.cpu_count() * 50)]
--
-   if args.host_cc or args.host_cxx:
-     assert args.host_cc and args.host_cxx, \
-            "--host-cc and --host-cxx need to be used together"
-@@ -819,79 +796,93 @@ def main():
-   cflags += libxml_cflags
-   cxxflags += libxml_cflags
- 
--  if args.bootstrap:
--    print('Building bootstrap compiler')
--    if os.path.exists(LLVM_BOOTSTRAP_DIR):
--      RmTree(LLVM_BOOTSTRAP_DIR)
--    EnsureDirExists(LLVM_BOOTSTRAP_DIR)
--    os.chdir(LLVM_BOOTSTRAP_DIR)
--
--    runtimes = []
--    if args.pgo or sys.platform == 'darwin':
--      # Need libclang_rt.profile for PGO.
--      # On macOS, the bootstrap toolchain needs to have compiler-rt because
--      # dsymutil's link needs libclang_rt.osx.a. Only the x86_64 osx
--      # libraries are needed though, and only libclang_rt (i.e.
--      # COMPILER_RT_BUILD_BUILTINS).
--      runtimes.append('compiler-rt')
--
--    bootstrap_targets = 'X86'
--    if sys.platform == 'darwin':
--      # Need ARM and AArch64 for building the ios clang_rt.
--      bootstrap_targets += ';ARM;AArch64'
+@@ -947,18 +957,33 @@ def main():
+     if sys.platform == 'darwin':
+       # Need ARM and AArch64 for building the ios clang_rt.
+       bootstrap_targets += ';ARM;AArch64'
 -    bootstrap_args = base_cmake_args + goma_cmake_args + [
 -        '-DLLVM_TARGETS_TO_BUILD=' + bootstrap_targets,
 -        '-DLLVM_ENABLE_PROJECTS=clang;lld',
@@ -135,135 +84,37 @@ index 1abebf0092a49..03fd4169a158e 100755
 -        '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
 -        # Ignore args.disable_asserts for the bootstrap compiler.
 -        '-DLLVM_ENABLE_ASSERTIONS=ON',
--    ]
--    # PGO needs libclang_rt.profile but none of the other compiler-rt stuff.
-+  print('Building bootstrap compiler')
-+  if os.path.exists(LLVM_BOOTSTRAP_DIR):
-+    RmTree(LLVM_BOOTSTRAP_DIR)
-+  EnsureDirExists(LLVM_BOOTSTRAP_DIR)
-+  os.chdir(LLVM_BOOTSTRAP_DIR)
-+
-+  runtimes = []
-+  if args.pgo or sys.platform == 'darwin':
-+    # Need libclang_rt.profile for PGO.
-+    # On macOS, the bootstrap toolchain needs to have compiler-rt because
-+    # dsymutil's link needs libclang_rt.osx.a. Only the x86_64 osx
-+    # libraries are needed though, and only libclang_rt (i.e.
-+    # COMPILER_RT_BUILD_BUILTINS).
-+    runtimes.append('compiler-rt')
-+
-+  bootstrap_targets = 'X86'
-+  if sys.platform == 'darwin':
-+    # Need ARM and AArch64 for building the ios clang_rt.
-+    bootstrap_targets += ';ARM;AArch64'
-+  bootstrap_args = [
-+  '-GNinja',
-+  '-DCMAKE_BUILD_TYPE=Release',
-+  '-DLLVM_ENABLE_ASSERTIONS=%s' % ('OFF' if args.disable_asserts else 'ON'),
-+  '-DLLVM_ENABLE_PROJECTS=clang;lld;polly',
-+  '-DLLVM_ENABLE_RUNTIMES=' + ';'.join(runtimes),
-+  '-DLLVM_TARGETS_TO_BUILD=' + bootstrap_targets,
-+  '-DLLVM_ENABLE_PIC=ON',
-+  '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
-+  '-DLLVM_ENABLE_TERMINFO=OFF',
-+  '-DLLVM_ENABLE_Z3_SOLVER=OFF',
-+  '-DCLANG_PLUGIN_SUPPORT=OFF',
-+  '-DCLANG_ENABLE_STATIC_ANALYZER=OFF',
-+  '-DCLANG_ENABLE_ARCMT=OFF',
-+  '-DBUG_REPORT_URL=' + BUG_REPORT_URL,
-+  '-DLLVM_ENABLE_DIA_SDK=OFF',
-+  '-DLLVM_ENABLE_LLD=ON',
-+  '-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF',
-+  '-DLLVM_ENABLE_CURL=OFF',
-+  '-DLIBCLANG_BUILD_STATIC=ON',
-+  '-DLLVM_ENABLE_ZSTD=OFF',
-+  '-DCMAKE_INSTALL_PREFIX=' + LLVM_BOOTSTRAP_INSTALL_DIR,
-+  '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
-+  '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
-+  '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
-+  '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
-+  '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-+  ]
-+  # PGO needs libclang_rt.profile but none of the other compiler-rt stuff.
-+  bootstrap_args.extend([
-+    '-D' + f
-+    for f in compiler_rt_cmake_flags(sanitizers=False, profile=args.pgo)
-+  ])
-+  if sys.platform == 'darwin':
++    bootstrap_args = zstd_cmake_args + goma_cmake_args + [
++      '-GNinja',
++      '-DCMAKE_BUILD_TYPE=Release',
++      '-DLLVM_ENABLE_ASSERTIONS=%s' % ('OFF' if args.disable_asserts else 'ON'),
++      '-DLLVM_ENABLE_PROJECTS=clang;lld;polly',
++      '-DLLVM_ENABLE_RUNTIMES=' + ';'.join(runtimes),
++      '-DLLVM_TARGETS_TO_BUILD=' + bootstrap_targets,
++      '-DLLVM_ENABLE_PIC=ON',
++      '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
++      '-DLLVM_ENABLE_TERMINFO=OFF',
++      '-DLLVM_ENABLE_Z3_SOLVER=OFF',
++      '-DCLANG_PLUGIN_SUPPORT=OFF',
++      '-DCLANG_ENABLE_STATIC_ANALYZER=OFF',
++      '-DCLANG_ENABLE_ARCMT=OFF',
++      '-DBUG_REPORT_URL=' + BUG_REPORT_URL,
++      '-DLLVM_ENABLE_DIA_SDK=OFF',
++      '-DLLVM_ENABLE_LLD=ON',
++      '-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF',
++      '-DLLVM_ENABLE_CURL=OFF',
++      '-DLIBCLANG_BUILD_STATIC=ON',
++      '-DLLVM_ENABLE_UNWIND_TABLES=OFF',
++      '-DCMAKE_INSTALL_PREFIX=' + LLVM_BOOTSTRAP_INSTALL_DIR,
++      '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
++      '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
++      '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
++      '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
++      '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
+     ]
+     # PGO needs libclang_rt.profile but none of the other compiler-rt stuff.
      bootstrap_args.extend([
--        '-D' + f
--        for f in compiler_rt_cmake_flags(sanitizers=False, profile=args.pgo)
--    ])
--    if sys.platform == 'darwin':
--      bootstrap_args.extend([
--          '-DCOMPILER_RT_ENABLE_IOS=OFF',
--          '-DCOMPILER_RT_ENABLE_WATCHOS=OFF',
--          '-DCOMPILER_RT_ENABLE_TVOS=OFF',
--          ])
--      if platform.machine() == 'arm64':
--        bootstrap_args.extend(['-DDARWIN_osx_ARCHS=arm64'])
--      else:
--        bootstrap_args.extend(['-DDARWIN_osx_ARCHS=x86_64'])
--
--    if cc is not None:  bootstrap_args.append('-DCMAKE_C_COMPILER=' + cc)
--    if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
--    if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
--    RunCommand(['cmake'] + bootstrap_args + [os.path.join(LLVM_DIR, 'llvm')],
--               setenv=True)
--    RunCommand(['ninja'] + goma_ninja_args, setenv=True)
--    if args.run_tests:
--      RunCommand(['ninja', 'check-all'], setenv=True)
--    RunCommand(['ninja', 'install'], setenv=True)
--
--    if sys.platform == 'win32':
--      cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
--      cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
--      lld = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'lld-link.exe')
--      # CMake has a hard time with backslashes in compiler paths:
--      # https://stackoverflow.com/questions/13050827
--      cc = cc.replace('\\', '/')
--      cxx = cxx.replace('\\', '/')
--      lld = lld.replace('\\', '/')
-+        '-DCOMPILER_RT_ENABLE_IOS=OFF',
-+        '-DCOMPILER_RT_ENABLE_WATCHOS=OFF',
-+        '-DCOMPILER_RT_ENABLE_TVOS=OFF',
-+        ])
-+    if platform.machine() == 'arm64':
-+      bootstrap_args.extend(['-DDARWIN_osx_ARCHS=arm64'])
-     else:
--      cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang')
--      cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang++')
-+      bootstrap_args.extend(['-DDARWIN_osx_ARCHS=x86_64'])
-+
-+  if cc is not None:  bootstrap_args.append('-DCMAKE_C_COMPILER=' + cc)
-+  if cxx is not None: bootstrap_args.append('-DCMAKE_CXX_COMPILER=' + cxx)
-+  if lld is not None: bootstrap_args.append('-DCMAKE_LINKER=' + lld)
-+  RunCommand(['cmake'] + bootstrap_args + [os.path.join(LLVM_DIR, 'llvm')],
-+         setenv=True)
-+  RunCommand(['ninja'], setenv=True)
-+  if args.run_tests:
-+    RunCommand(['ninja', 'check-all'], setenv=True)
-+  RunCommand(['ninja', 'install'], setenv=True)
-+
-+  if sys.platform == 'win32':
-+    cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
-+    cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang-cl.exe')
-+    lld = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'lld-link.exe')
-+    # CMake has a hard time with backslashes in compiler paths:
-+    # https://stackoverflow.com/questions/13050827
-+    cc = cc.replace('\\', '/')
-+    cxx = cxx.replace('\\', '/')
-+    lld = lld.replace('\\', '/')
-+  else:
-+    cc = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang')
-+    cxx = os.path.join(LLVM_BOOTSTRAP_INSTALL_DIR, 'bin', 'clang++')
- 
--    print('Bootstrap compiler installed.')
-+  print('Bootstrap compiler installed.')
- 
-   if args.pgo:
-     print('Building instrumented compiler')
-@@ -901,9 +892,9 @@ def main():
+@@ -1009,9 +1034,9 @@ def main():
      os.chdir(LLVM_INSTRUMENTED_DIR)
  
      instrument_args = base_cmake_args + [
@@ -276,7 +127,7 @@ index 1abebf0092a49..03fd4169a158e 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -946,8 +937,12 @@ def main():
+@@ -1054,8 +1079,12 @@ def main():
      with open(training_source, 'wb') as f:
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
@@ -291,7 +142,7 @@ index 1abebf0092a49..03fd4169a158e 100755
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
      RunCommand(train_cmd, setenv=True)
-@@ -997,11 +992,6 @@ def main():
+@@ -1105,11 +1134,6 @@ def main():
    if lld is not None: base_cmake_args.append('-DCMAKE_LINKER=' + lld)
    final_install_dir = args.install_dir if args.install_dir else LLVM_BUILD_DIR
    cmake_args = base_cmake_args + [
@@ -303,13 +154,13 @@ index 1abebf0092a49..03fd4169a158e 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1014,7 +1004,24 @@ def main():
+@@ -1122,7 +1146,24 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
 -    cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append( '-DLLVM_ENABLE_LTO=Thin' )
-+    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=4' )
++    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=16' )
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fno-split-lto-unit -fwhole-program-vtables ' + ' '.join(cxxflags) )
 +    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-polly-invariant-load-hoisting ' + ' '.join(ldflags) )
@@ -329,28 +180,7 @@ index 1abebf0092a49..03fd4169a158e 100755
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1290,11 +1297,6 @@ def main():
-   cmake_args.append('-DLLVM_BUILTIN_TARGETS=' + all_triples)
-   cmake_args.append('-DLLVM_RUNTIME_TARGETS=' + all_triples)
- 
--  # If we're bootstrapping, Goma doesn't know about the bootstrap compiler
--  # we're using as the host compiler.
--  if not args.bootstrap:
--    cmake_args.extend(goma_cmake_args)
--
-   if os.path.exists(LLVM_BUILD_DIR):
-     RmTree(LLVM_BUILD_DIR)
-   EnsureDirExists(LLVM_BUILD_DIR)
-@@ -1302,7 +1304,7 @@ def main():
-   RunCommand(['cmake'] + cmake_args + [os.path.join(LLVM_DIR, 'llvm')],
-              setenv=True,
-              env=deployment_env)
--  RunCommand(['ninja'] + goma_ninja_args, setenv=True)
-+  RunCommand(['ninja'], setenv=True)
- 
-   if chrome_tools:
-     # If any Chromium tools were built, install those now.
-@@ -1316,7 +1318,7 @@ def main():
+@@ -1424,7 +1465,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -359,7 +189,7 @@ index 1abebf0092a49..03fd4169a158e 100755
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1332,8 +1334,6 @@ def main():
+@@ -1440,8 +1481,6 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -368,7 +198,7 @@ index 1abebf0092a49..03fd4169a158e 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1345,6 +1345,8 @@ def main():
+@@ -1453,6 +1492,8 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -377,7 +207,7 @@ index 1abebf0092a49..03fd4169a158e 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1361,9 +1363,14 @@ def main():
+@@ -1469,9 +1510,14 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
