@@ -36,7 +36,7 @@ index 932bda5bb68c3..8f0da4db7c0f4 100755
      return 1
 +  if args.with_goma:
 +    print('Customized build script does not support --with-goma')
-+    return 1  
++    return 1
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
      print('The Android NDK is needed to build a Clang whose -fsanitize=address')
