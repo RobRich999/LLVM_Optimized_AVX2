@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 2e84b05083e66..f781dd122b666 100755
+index 2e84b05083e66..a9ab82e1da406 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -377,6 +377,7 @@ def BuildLibXml2():
@@ -42,7 +42,7 @@ index 2e84b05083e66..f781dd122b666 100755
 -  ldflags = []
 +  cflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3 -mprefer-vector-width=128 -ffp-contract=fast' ]
 +  cxxflags = [ '-O3 -DNDEBUG -w -march=x86-64-v3 -mprefer-vector-width=128 -ffp-contract=fast' ]
-+  ldflags = [ ]
++  ldflags = [ '-fuse-ld=lld' ]
  
    targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
