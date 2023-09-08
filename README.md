@@ -34,7 +34,7 @@ PGO and BOLT are not too LLVM build time intensive for a relatively fast system 
 
 ****
 
-**Note regarding mimalloc:**
+**Note regarding mimalloc (temporarily disabled):**
 
 Note a local build of the mimalloc allocator is pulled into the LLVM build script as a replacement for the standard Linux malloc allocator. Those using the modified script will need to obtain and build mimalloc, then update the path to libmimalloc.a calls in the script accordingly. Otherwise libmimalloc.a can be removed from the linker calls if malloc is preferred.
 
