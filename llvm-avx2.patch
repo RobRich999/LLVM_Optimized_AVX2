@@ -319,7 +319,7 @@ index 880407b491b69..f30a11423094a 100755
 +        '--elim-link-veneers', '--group-stubs', '--align-blocks', '--sctc-mode=heuristic',
 +        '--jump-tables=aggressive', '--simplify-conditional-tail-calls',
 +        '--simplify-rodata-loads', '--align-macro-fusion=all', '--eliminate-unreachable',
-+       '--tail-duplication=cache', '--indirect-call-promotion=all', '--icp-eliminate-loads',
++        '--tail-duplication=cache', '--indirect-call-promotion=all', '--icp-eliminate-loads',
 +        '--hot-data', '--x86-strip-redundant-address-size', '--no-huge-pages', '--lite=false',
      ])
  
