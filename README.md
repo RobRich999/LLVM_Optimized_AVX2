@@ -46,7 +46,7 @@ https://github.com/microsoft/mimalloc
 
 The release builds include the needed compiler-rt libraries to support the Linux cross-building of Chromium for Windows.
 
-Alternatively, if using the build script, the LLVM lib/clang/17/lib/windows/ library files will need to be copied manually from the LLVM package bundled by Chromium.
+Alternatively, if using the build script, the LLVM lib/clang/18/lib/windows/ library files will need to be copied manually from the LLVM package bundled by Chromium.
 
 ****
 
