@@ -248,7 +248,7 @@ index 880407b491b69..8bf32061c8f71 100755
 -                 '-fno-exceptions', '-fno-rtti', '-w', '-c', training_source]
 +                 '-target', 'x86_64-unknown-unknown', '-O3', '-g', '-std=c++14',
 +                 '-march=x86-64-v3', '-ffp-contract=fast', '-mllvm', '-polly',
-+                 '-fmerge-all-constants', '-fdata-sections', '-ffunction-sections', 
++                 '-fmerge-all-constants', '-fdata-sections', '-ffunction-sections',
 +                 '-fno-exceptions', '-fno-rtti', '-w',
 +                 '-c', training_source]
      if sys.platform == 'darwin':
