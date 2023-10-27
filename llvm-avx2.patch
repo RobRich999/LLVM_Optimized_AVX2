@@ -354,28 +354,3 @@ index f482e508a8bf7..c519d09134462 100755
  # Path constants. (All of these should be absolute paths.)
  THIS_DIR = os.path.abspath(os.path.dirname(__file__))
  CHROMIUM_DIR = os.path.abspath(os.path.join(THIS_DIR, '..', '..', '..'))
-diff --git a/tools/rust/build_rust.py b/tools/rust/build_rust.py
-index 423d09bc39fb7..e1d7d4360c6b9 100755
---- a/tools/rust/build_rust.py
-+++ b/tools/rust/build_rust.py
-@@ -325,6 +325,11 @@ class XPy:
-             'RUSTDOCFLAGS',
-         ]
- 
-+        self._env['CFLAGS'] += "-O3 -march=x86-64-v3 -w",
-+        self._env['CXXFLAGS'] += "-O3 -march=x86-64-v3 -w",
-+        self._env['RUSTFLAGS_BOOTSTRAP'] += '-Copt-level=3 -Ctarget-cpu=x86-64 -Awarnings',
-+        self._env['RUSTFLAGS_NOT_BOOTSTRAP'] += '-Copt-level=3 -Ctarget-cpu=x86-64 -Awarnings',
-+
-         self._env = collections.defaultdict(str, os.environ)
-         for f in ENV_FLAGS:
-             self._env.setdefault(f, '')
-@@ -557,6 +562,8 @@ def BuildLLVMLibraries(skip_build, build_mac_arm):
-             '--with-ml-inliner-model=',
-             # Not using this in Rust yet, see also crbug.com/1476464.
-             '--without-zstd',
-+            "--bootstrap",
-+            "--llvm-force-head-revision",
-         ]
-         if sys.platform.startswith('linux'):
-             build_cmd.append('--without-android')
