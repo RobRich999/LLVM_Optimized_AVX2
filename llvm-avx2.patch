@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 880407b491b69..fdb3a390beaf9 100755
+index 880407b491b69..d49b15484c19a 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -40,7 +40,7 @@ from update import (CDS_URL, CHROMIUM_DIR, CLANG_REVISION, LLVM_BUILD_DIR,
@@ -136,9 +136,9 @@ index 880407b491b69..fdb3a390beaf9 100755
 -  cflags = []
 -  cxxflags = []
 -  ldflags = []
-+  cflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w ' ]
-+  cxxflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w ' ]
-+  ldflags = [ '-fuse-ld=lld -Wl,-z,keep-text-section-prefix -pthread ' ]
++  cflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w -fdata-sections -ffunction-sections -mllvm -unroll-max-iteration-count-to-analyze=100 ' ]
++  cxxflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w -fdata-sections -ffunction-sections -mllvm -unroll-max-iteration-count-to-analyze=100 ' ]
++  ldflags = [ '-fuse-ld=lld -Wl,-z,keep-text-section-prefix -pthread -w -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' ]
  
 -  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
@@ -158,6 +158,15 @@ index 880407b491b69..fdb3a390beaf9 100755
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
        '-DCLANG_PLUGIN_SUPPORT=OFF',
+@@ -851,7 +906,7 @@ def main():
+   else:
+     base_cmake_args += ['-DLLVM_ENABLE_UNWIND_TABLES=OFF']
+ 
+-  # See https://crbug.com/1302636#c49 - #c56 -- intercepting crypt_r() does not
++  # Se*e https://crbug.com/1302636#c49 - #c56 -- intercepting crypt_r() does not
+   # work with the sysroot for not fully understood reasons. Disable it.
+   sanitizers_override = [
+     '-DSANITIZER_OVERRIDE_INTERCEPTORS',
 @@ -923,6 +978,10 @@ def main():
      base_cmake_args.append('-DLLVM_WINSYSROOT="%s"' %
                             os.path.dirname(os.path.dirname(GetWinSDKDir())))
@@ -248,17 +257,17 @@ index 880407b491b69..fdb3a390beaf9 100755
 +    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=16' )
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fno-split-lto-unit ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fno-split-lto-unit ' + ' '.join(cxxflags) )
-+    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-unroll-max-iteration-count-to-analyze=100 -Wl,-mllvm,-polly ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-unroll-max-iteration-count-to-analyze=100 ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all -Wl,-mllvm,-polly -Wl,-mllvm,-unroll-max-iteration-count-to-analyze=100 ' + ' '.join(ldflags) )
 +    if args.pgo:
 +      cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement ' + ' '.join(ldflags) )
 +      cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement ' + ' '.join(ldflags) )
 +      cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement ' + ' '.join(ldflags) )
 +  else:
 +    if args.pgo:
-+      cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags) )
-+      cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags) )
++      cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement -mllvm -polly ' + ' '.join(cflags) )
++      cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement -mllvm -polly ' + ' '.join(cxxflags) )
 +
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
@@ -291,7 +300,7 @@ index 880407b491b69..fdb3a390beaf9 100755
      ]
 +    if args.pgo:
 +      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
-+      cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags) )
++      cmake_args.append( '-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cflags) )
 +      cmake_args.append( '-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags) )
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
@@ -315,7 +324,7 @@ index 880407b491b69..fdb3a390beaf9 100755
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
 diff --git a/tools/clang/scripts/update.py b/tools/clang/scripts/update.py
-index f482e508a8bf7..c519d09134462 100755
+index 2b2dc1a58d624..2cbe1f8f5c8e6 100755
 --- a/tools/clang/scripts/update.py
 +++ b/tools/clang/scripts/update.py
 @@ -45,6 +45,8 @@ RELEASE_VERSION = '18'
