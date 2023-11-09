@@ -10,7 +10,9 @@ https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v18-rbde5717
 
 The binary builds included in this repository are accomplished under Uubuntu Server 23.10 (Mantic Minotaur) via the modified build script and the following options:
 
-python3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
+>  export MIMALLOC_ALLOW_LARGE_OS_PAGES=1
+>
+> python3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
 
@@ -20,13 +22,13 @@ Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, t
 
 Apply the patch via the /chromium/src directory to modify the LLVM build script.
 
-git apply /path/to/llvm-avx2.patch
+> git apply /path/to/llvm-avx2.patch
 
 LLVM is built with -march=x86-64-v3 and other optimizations. Optimizations have been carried down into the PGO, ThinLTO, and BOLT build options.
 
 Usage example from the /chromium/src directory:
 
-vpython3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
+> vpython3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Building LLVM with ThinLTO, PGO, and BOLT optimizations are optional. Regardless, LLLVM still builds with optimizations for -O3, AVX2, Polly, etc.
 
@@ -36,7 +38,7 @@ PGO and BOLT tend to not be too LLVM build time intensive for a relatively fast 
 
 **Note regarding mimalloc:**
 
-The mimalloc allocator is automatically pulled into the LLVM build script as a replacement for the standard Linux malloc allocator.
+The mimalloc allocator is automatically pulled into the LLVM build script as a replacement for the standard Linux glibc malloc allocator.
 
 https://github.com/microsoft/mimalloc
 
