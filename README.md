@@ -8,7 +8,7 @@ Clang/LLVM built for Ubuntu 23.10 and similar platforms using a modified Chromiu
 
 https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v18-r4a9c71b-linux64-avx2
 
-The binary builds included in this repository are accomplished under Uubuntu Server 23.10 (Mantic Minotaur) via the modified build script and the following options:
+The binary builds included in this repository are accomplished under Ubuntu Server 23.10 (Mantic Minotaur) via the modified build script and the following options:
 
 >  export MIMALLOC_ALLOW_LARGE_OS_PAGES=1
 >
