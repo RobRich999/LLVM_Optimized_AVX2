@@ -11,7 +11,8 @@ https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v18-r4a9c71b
 The binary builds included in this repository are accomplished under Ubuntu Server 23.10 (Mantic Minotaur) via the modified build script and the following options:
 
 >export MIMALLOC_ALLOW_LARGE_OS_PAGES=1  
->export MIMALLOC_PURGE_DELAY=100  
+>export MIMALLOC_PURGE_DELAY=100
+>
 >python3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
