@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 880407b491b69..e305489cc7cb0 100755
+index 880407b491b69..5cab231d90b85 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -75,9 +75,13 @@ BUG_REPORT_URL = ('https://crbug.com in the Tools>LLVM component,'
@@ -143,7 +143,7 @@ index 880407b491b69..e305489cc7cb0 100755
 -  ldflags = []
 +  cflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w -fdata-sections -ffunction-sections ' ]
 +  cxxflags = [ '-O3 -DNDEBUG -march=x86-64-v3 -w -fdata-sections -ffunction-sections ' ]
-+  ldflags = [ '-fuse-ld=lld -Wl,-z,keep-text-section-prefix -pthread -w -Wl,-O2 -Wl,--gc-sections ' ]
++  ldflags = [ '-fuse-ld=lld -pthread -w -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' ]
  
 -  targets = 'AArch64;ARM;LoongArch;Mips;PowerPC;RISCV;SystemZ;WebAssembly;X86'
 -  projects = 'clang;lld;clang-tools-extra'
@@ -199,12 +199,14 @@ index 880407b491b69..e305489cc7cb0 100755
      ]
      # PGO needs libclang_rt.profile but none of the other compiler-rt stuff.
      bootstrap_args.extend([
-@@ -1021,8 +1089,8 @@ def main():
+@@ -1020,9 +1088,9 @@ def main():
+     os.chdir(LLVM_INSTRUMENTED_DIR)
  
      instrument_args = base_cmake_args + [
-         '-DLLVM_ENABLE_PROJECTS=clang',
+-        '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
++        '-DLLVM_ENABLE_PROJECTS=clang;polly',
 +        '-DCMAKE_C_FLAGS=-mllvm -vp-counters-per-site=3 ' + ' '.join(cflags),
 +        '-DCMAKE_CXX_FLAGS=-mllvm -vp-counters-per-site=3 ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
@@ -215,22 +217,24 @@ index 880407b491b69..e305489cc7cb0 100755
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
 -                '-target', 'x86_64-unknown-unknown', '-O2', '-g', '-std=c++14',
-+                 '-target', 'x86_64-unknown-unknown', '-O3', '-g', '-std=c++14',
++                 '-target', 'x86_64-unknown-unknown', '-O3', '-g', '-std=c++20',
 +                 '-march=x86-64-v3', '-ffp-contract=fast', '-fmerge-all-constants',
-+                 '-fdata-sections', '-ffunction-sections',
++                 '-fdata-sections', '-ffunction-sections', '-mllvm', '-polly',
                   '-fno-exceptions', '-fno-rtti', '-w', '-c', training_source]
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
-@@ -1105,7 +1175,7 @@ def main():
+@@ -1105,7 +1175,9 @@ def main():
    # Keep static relocations in the executable for BOLT to analyze. Resolve all
    # symbols on program start to allow BOLT's PLT optimization.
    if args.bolt:
 -    ldflags += ['-Wl,--emit-relocs', '-Wl,-znow']
 +    ldflags += ['-Wl,--emit-relocs', '-Wl,-znow', ]
++
++  ldflags += [ '-Wl,-z,keep-text-section-prefix ' ]
  
    chrome_tools = []
    if not args.no_tools:
-@@ -1133,7 +1203,22 @@ def main():
+@@ -1133,7 +1205,22 @@ def main():
    if args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
    if args.thinlto:
@@ -239,9 +243,9 @@ index 880407b491b69..e305489cc7cb0 100755
 +    cmake_args.append( '-DLLVM_PARALLEL_LINK_JOBS=16' )
 +    cmake_args.append( '-DCMAKE_C_FLAGS=-flto=thin -fno-split-lto-unit ' + ' '.join(cflags) )
 +    cmake_args.append( '-DCMAKE_CXX_FLAGS=-flto=thin -fno-split-lto-unit ' + ' '.join(cxxflags) )
-+    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
-+    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=30 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
++    cmake_args.append( '-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -Wl,-mllvm,-import-instr-limit=100 -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,--thinlto-jobs=all ' + ' '.join(ldflags) )
 +    if args.pgo:
 +      cmake_args.append( '-DCMAKE_EXE_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement ' + ' '.join(ldflags) )
 +      cmake_args.append( '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-mllvm,-enable-ext-tsp-block-placement ' + ' '.join(ldflags) )
@@ -254,7 +258,7 @@ index 880407b491b69..e305489cc7cb0 100755
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1438,7 +1523,7 @@ def main():
+@@ -1438,7 +1525,7 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -263,18 +267,18 @@ index 880407b491b69..e305489cc7cb0 100755
          '--instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
-@@ -1454,8 +1539,8 @@ def main():
+@@ -1454,8 +1541,8 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
-+        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants ' + ' '.join(cflags),
-+        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants ' + ' '.join(cxxflags),
++        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly ' + ' '.join(cflags),
++        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1467,6 +1552,10 @@ def main():
+@@ -1467,6 +1554,10 @@ def main():
          os.path.join(LLVM_BUILD_DIR, 'bin/clang-bolt.inst'),
          '-DCMAKE_ASM_COMPILER_ID=Clang',
      ]
@@ -285,7 +289,7 @@ index 880407b491b69..e305489cc7cb0 100755
      RunCommand(['cmake'] + bolt_train_cmake_args +
                 [os.path.join(LLVM_DIR, 'llvm')])
      RunCommand([
-@@ -1483,9 +1572,15 @@ def main():
+@@ -1483,9 +1574,16 @@ def main():
      ])
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
@@ -294,13 +298,14 @@ index 880407b491b69..e305489cc7cb0 100755
 -        '-icf=1', '-use-gnu-stack', '-use-old-text'
 +        'merged.fdata', '--reorder-blocks=ext-tsp', '--reorder-functions=hfsort+',
 +        '--split-functions', '--split-all-cold', '--split-eh', '--dyno-stats',
-+        '--icf', '--use-gnu-stack', '--use-old-text', '--peepholes=all',
-+        '--elim-link-veneers', '--group-stubs', '--align-blocks', '--sctc-mode=heuristic',
++        '--icf', '--use-gnu-stack', '--peepholes=all', '--elim-link-veneers',
++        '--group-stubs', '--align-blocks', '--sctc-mode=heuristic',
 +        '--jump-tables=aggressive', '--simplify-conditional-tail-calls',
 +        '--simplify-rodata-loads', '--align-macro-fusion=all', '--eliminate-unreachable',
 +        '--tail-duplication=cache', '--indirect-call-promotion=all', '--icp-eliminate-loads',
-+        '--hot-data', '--x86-strip-redundant-address-size', '--no-huge-pages',
-+        '--reorder-functions-use-hot-size', '--reorder-data-inplace', '--lite=false',
++        '--hot-data', '--x86-strip-redundant-address-size', '--reorder-functions-use-hot-size',
++        '--reorder-data-algo=funcs','--no-huge-pages', '--lite=false',
++         # '-use-old-text', '--reorder-data-inplace',
      ])
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
