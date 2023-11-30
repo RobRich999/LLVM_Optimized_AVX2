@@ -34,14 +34,6 @@ PGO and BOLT tend to not be too LLVM build time intensive for a relatively fast 
 
 ****
 
-**Note regarding mimalloc:**
-
-The mimalloc allocator is automatically pulled into the LLVM build script as a replacement for the standard Linux glibc malloc allocator.
-
-https://github.com/microsoft/mimalloc
-
-****
-
 **Note regarding Windows cross-building:**
 
 The release builds include the needed compiler-rt libraries to support the Linux cross-building of Chromium for Windows.
