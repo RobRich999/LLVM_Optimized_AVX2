@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 76106adefdce2..aeca0e97f9f30 100755
+index 76106adefdce2..70abf90e1cd22 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
@@ -270,7 +270,11 @@ index 76106adefdce2..aeca0e97f9f30 100755
      ])
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
-@@ -1520,22 +1564,25 @@ def main():
+@@ -1516,26 +1560,28 @@ def main():
+   if not args.build_mac_arm:
+     VerifyVersionOfBuiltClangMatchesVERSION()
+     VerifyZlibSupport()
+-  if args.with_zstd:
      VerifyZStdSupport()
  
    # Run tests.
