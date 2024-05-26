@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 76106adefdce2..399ebb57a3ed2 100755
+index 76106adefdce2..0caff1c35fc7c 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
@@ -251,8 +251,8 @@ index 76106adefdce2..399ebb57a3ed2 100755
          '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
-+        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections ' + ' '.join(cflags),
-+        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections ' + ' '.join(cxxflags),
++        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections -g ' + ' '.join(cflags),
++        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections -g ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
