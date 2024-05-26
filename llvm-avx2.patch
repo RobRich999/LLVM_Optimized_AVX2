@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 76106adefdce2..8dbc712370e95 100755
+index 76106adefdce2..399ebb57a3ed2 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
@@ -198,9 +198,9 @@ index 76106adefdce2..8dbc712370e95 100755
 +    cmake_args.append('-DLLVM_PARALLEL_LINK_JOBS=16')
 +    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections ' + ' '.join(cflags))
 +    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
 +  else:
 +    cmake_args.append('-DCMAKE_C_FLAGS= ' + ' '.join(cflags))
 +    cmake_args.append('-DCMAKE_CXX_FLAGS= ' + ' '.join(cxxflags))
@@ -251,8 +251,8 @@ index 76106adefdce2..8dbc712370e95 100755
          '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
-++        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly ' + ' '.join(cflags),
-++        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly ' + ' '.join(cxxflags),
++        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections ' + ' '.join(cflags),
++        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly -fdata-sections -ffunction-sections ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
