@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 76106adefdce2..0caff1c35fc7c 100755
+index 76106adefdce2..4bc66145f0c83 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
@@ -177,36 +177,36 @@ index 76106adefdce2..0caff1c35fc7c 100755
      ])
 -  if args.pgo:
 +  if args.pgo and not args.thinlto:
-+    cmake_args.append('-DLLVM_PROFDATA_FILE=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement ' + LLVM_PROFDATA_FILE)
-+    cmake_args.append('-DCMAKE_C_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DLLVM_PROFDATA_FILE=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections ' + LLVM_PROFDATA_FILE)
++    cmake_args.append('-DCMAKE_C_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
 +  if args.thinlto and not args.pgo:
 +    cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append('-DLLVM_PARALLEL_LINK_JOBS=16')
-+    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -fdata-sections -ffunction-sections ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -fdata-sections -ffunction-sections ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
 +  if args.thinlto and args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
 -  if args.thinlto:
      cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append('-DLLVM_PARALLEL_LINK_JOBS=16')
-+    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections -fdata-sections -ffunction-sections ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections -fdata-sections -ffunction-sections ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-split-machine-functions -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
 +  else:
-+    cmake_args.append('-DCMAKE_C_FLAGS= ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS= ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS= ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-fdata-sections -ffunction-sections ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-fdata-sections -ffunction-sections ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections -Wl,--icf=all ' + ' '.join(ldflags))
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
@@ -234,18 +234,19 @@ index 76106adefdce2..0caff1c35fc7c 100755
          ],
          "profile": True,
          "sanitizers": True,
-@@ -1459,8 +1498,8 @@ def main():
+@@ -1459,8 +1498,9 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
 -        '-instrument', '--instrumentation-file-append-pid',
 -        '--instrumentation-file=' +
++        '-eliminate-unreachable=0', '-simplify-conditional-tail-calls=0',
 +        '-lite=false','-instrument', '-instrumentation-file-append-pid',
 +        '-instrumentation-file=' +
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
      RunCommand([
-@@ -1475,8 +1514,8 @@ def main():
+@@ -1475,8 +1515,8 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
@@ -256,7 +257,7 @@ index 76106adefdce2..0caff1c35fc7c 100755
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1506,7 +1545,12 @@ def main():
+@@ -1506,7 +1546,13 @@ def main():
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
          'merged.fdata', '-reorder-blocks=ext-tsp', '-reorder-functions=hfsort+',
          '-split-functions', '-split-all-cold', '-split-eh', '-dyno-stats',
@@ -266,11 +267,12 @@ index 76106adefdce2..0caff1c35fc7c 100755
 +        '-jump-tables=aggressive', '-simplify-rodata-loads', '-align-macro-fusion=all',
 +        '-tail-duplication=cache', '-indirect-call-promotion=all', '-icp-eliminate-loads',
 +        '-hot-data', '-x86-strip-redundant-address-size', '-reorder-functions-use-hot-size',
-+        '-reorder-data-algo=funcs', '-lite=false',
++        '-reorder-data-algo=funcs', '-eliminate-unreachable=0', '-simplify-conditional-tail-calls=0',
++        '-lite=false',
      ])
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
-@@ -1516,26 +1560,28 @@ def main():
+@@ -1516,26 +1562,28 @@ def main():
    if not args.build_mac_arm:
      VerifyVersionOfBuiltClangMatchesVERSION()
      VerifyZlibSupport()
