@@ -1,6 +1,6 @@
 **LLVM_Optimized_AVX2:**
 
-Clang/LLVM built for Ubuntu 23.10 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
+Clang/LLVM built for Ubuntu 24.10 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
 
 ----
 
@@ -38,7 +38,7 @@ PGO and BOLT tend to not be too LLVM build time intensive for a relatively fast 
 
 The release builds include the needed compiler-rt libraries to support the Linux cross-building of Chromium for Windows.
 
-Alternatively, if using the build script, the LLVM lib/clang/18/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
+Alternatively, if using the build script, the LLVM lib/clang/19/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
 
 ****
 
