@@ -1,5 +1,5 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 76106adefdce2..ec10bd8cea0ce 100755
+index 76106adefdce2..8dbc712370e95 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
 @@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
@@ -266,7 +266,7 @@ index 76106adefdce2..ec10bd8cea0ce 100755
 +        '-jump-tables=aggressive', '-simplify-rodata-loads', '-align-macro-fusion=all',
 +        '-tail-duplication=cache', '-indirect-call-promotion=all', '-icp-eliminate-loads',
 +        '-hot-data', '-x86-strip-redundant-address-size', '-reorder-functions-use-hot-size',
-+        '-reorder-data-algo=funcs', '--use-old-text', '-lite=false',
++        '-reorder-data-algo=funcs', '-lite=false',
      ])
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
