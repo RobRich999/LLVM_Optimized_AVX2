@@ -4,21 +4,9 @@ Clang/LLVM built for Ubuntu 24.10 and similar platforms using a modified Chromiu
 
 ----
 
-**Link to latest release build:**
-
-https://github.com/RobRich999/LLVM_Optimized_AVX2/releases/tag/llvm-v18-r6d3ebd8-linux64-avx2
-
-The binary builds included in this repository are accomplished under Ubuntu Server 23.10 (Mantic Minotaur) via the modified build script and the following options:
-
->python3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
-
-Similar to how a subset of LLVM binaries are packaged with Chromium checkouts, these binary builds include the basic tools needed for accomplishing a release build of the Chromium web browser.
-
-----
-
 **Script modifications and details:**
 
-Apply the patch via the /chromium/src directory to modify the LLVM build script.
+Apply the patch via the /chromium/src directory to modify the Chromium project LLVM build script.
 
 > git apply /path/to/llvm-avx2.patch
 
@@ -36,9 +24,7 @@ PGO and BOLT tend to not be too LLVM build time intensive for a relatively fast 
 
 **Note regarding Windows cross-building:**
 
-The release builds include the needed compiler-rt libraries to support the Linux cross-building of Chromium for Windows.
-
-Alternatively, if using the build script, the LLVM lib/clang/19/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
+If cross-building Windows binaries, the LLVM lib/clang/19/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
 
 ****
 
