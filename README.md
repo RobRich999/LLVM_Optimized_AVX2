@@ -1,6 +1,6 @@
 **LLVM_Optimized_AVX2:**
 
-Clang/LLVM built for Ubuntu 24.10 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
+Clang/LLVM built for Ubuntu 24.04 and similar platforms using a modified Chromium build script. The build targets Linux x86-64-v3 with the Clang, LLD, Polly, and BOLT projects being built.
 
 ----
 
