@@ -1,18 +1,9 @@
 diff --git a/tools/clang/scripts/build.py b/tools/clang/scripts/build.py
-index 6d57def43567e..461cb2a1db4bc 100755
+index 76106adefdce2..aeca0e97f9f30 100755
 --- a/tools/clang/scripts/build.py
 +++ b/tools/clang/scripts/build.py
-@@ -78,6 +78,8 @@ BUG_REPORT_URL = ('https://crbug.com in the Tools>LLVM component,'
- LIBXML2_VERSION = 'libxml2-v2.9.12'
- ZSTD_VERSION = 'zstd-1.5.5'
- 
-+MIMALLOC_URL = 'https://github.com/microsoft/mimalloc/archive/refs/tags/v2.1.2.tar.gz'
-+
- win_sdk_dir = None
- def GetWinSDKDir():
-   """Get the location of the current SDK."""
-@@ -167,7 +169,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
-     if (RunCommand(['git', 'diff-index', '--quiet', 'HEAD'], fail_hard=False)
+@@ -167,7 +167,7 @@ def CheckoutGitRepo(name, git_url, commit, dir):
+                    fail_hard=False)
          and RunCommand(['git', 'fetch'], fail_hard=False)
          and RunCommand(['git', 'checkout', commit], fail_hard=False)
 -        and RunCommand(['git', 'clean', '-f'], fail_hard=False)):
@@ -20,88 +11,35 @@ index 6d57def43567e..461cb2a1db4bc 100755
        return
  
      # If we can't use the current repo, delete it.
-@@ -377,6 +379,13 @@ def BuildLibXml2():
+@@ -377,6 +377,13 @@ def BuildLibXml2():
            '-DLIBXML2_WITH_XPATH=OFF',
            '-DLIBXML2_WITH_XPTR=OFF',
            '-DLIBXML2_WITH_ZLIB=OFF',
 +          '-DCMAKE_C_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang'),
 +          '-DCMAKE_CXX_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang++'),
-+          '-DCMAKE_C_FLAGS=-O3 -march=x86-64-v3 -w ',
-+          '-DCMAKE_CXX_FLAGS=-O3 -march=x86-64-v3 -w ',
++          '-DCMAKE_C_FLAGS_RELEASE=-O3 -march=x86-64-v3 -w ',
++          '-DCMAKE_CXX_FLAGS_RELEASE=-O3 -march=x86-64-v3 -w ',
 +          '-DCMAKE_EXE_LINKER_FLAGS=-w ',
 +          '-DCMAKE_SHARED_LINKER_FLAGS=-w ',
 +          '-DCMAKE_MODULE_LINKER_FLAGS=-w ',
            '..',
        ],
        setenv=True)
-@@ -455,6 +464,13 @@ def BuildZStd():
+@@ -454,6 +461,13 @@ def BuildZStd():
+           '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64',
            '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded',  # /MT to match LLVM.
            '-DZSTD_BUILD_SHARED=OFF',
-           '../build/cmake',
 +          '-DCMAKE_C_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang'),
 +          '-DCMAKE_CXX_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang++'),
-+          '-DCMAKE_C_FLAGS=-O3 -march=x86-64-v3 -w ',
-+          '-DCMAKE_CXX_FLAGS=-O3 -march=x86-64-v3 -w ',
++          '-DCMAKE_C_FLAGS_RELEASE=-O3 -march=x86-64-v3 -w ',
++          '-DCMAKE_CXX_FLAGS_RELEASE=-O3 -march=x86-64-v3 -w ',
 +          '-DCMAKE_EXE_LINKER_FLAGS=-w ',
 +          '-DCMAKE_SHARED_LINKER_FLAGS=-w ',
 +          '-DCMAKE_MODULE_LINKER_FLAGS=-w ',
+           '../build/cmake',
        ],
        setenv=True)
-   RunCommand(['ninja', 'install'], setenv=True)
-@@ -473,6 +489,52 @@ def BuildZStd():
- 
-   return extra_cmake_flags, extra_cflags
- 
-+class LibMimallocDirs:
-+  """
-+  The set of directories where zstd is located.
-+
-+  Includes the diractories where the source is unpacked, where it is built,
-+  and installed.
-+  """
-+  def __init__(self):
-+    self.unzip_dir = LLVM_BUILD_TOOLS_DIR
-+    self.src_dir = os.path.join(self.unzip_dir, 'mimalloc-2.1.2')
-+    self.build_dir = os.path.join(self.src_dir, 'build')
-+
-+def BuildLibMimalloc():
-+  """Download and build mimalloc"""
-+
-+  dirs = LibMimallocDirs()
-+  if os.path.exists(dirs.src_dir):
-+    RmTree(dirs.src_dir)
-+  DownloadAndUnpack(MIMALLOC_URL, dirs.unzip_dir)
-+  os.mkdir(dirs.build_dir)
-+  os.chdir(dirs.build_dir)
-+
-+  RunCommand(
-+      [
-+          'cmake',
-+          '-GNinja',
-+          '-DCMAKE_BUILD_TYPE=Release',
-+          '-DCMAKE_C_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang'),
-+          '-DCMAKE_CXX_COMPILER=' + os.path.join(PINNED_CLANG_DIR, 'bin', 'clang++'),
-+          '-DCMAKE_C_FLAGS=-O3 -march=x86-64-v3 -pthread -w ',
-+          '-DCMAKE_CXX_FLAGS=-O3 -march=x86-64-v3 -pthread -w ',
-+          '-DCMAKE_EXE_LINKER_FLAGS=-pthread -w ',
-+          '-DCMAKE_SHARED_LINKER_FLAGS=-pthread -w ',
-+          '-DCMAKE_MODULE_LINKER_FLAGS=-pthread -w ',
-+          '-DMI_OVERRIDE=ON',
-+          '-DMI_SHOW_ERRORS=OFF',
-+          '..',
-+      ],
-+      setenv=True)
-+  RunCommand(['ninja'], setenv=True)
-+
-+  MIMALLOC_LIB = os.path.abspath(os.path.join(LLVM_DIR, '..', 'llvm-build-tools/mimalloc-2.1.2')) + '/build/mimalloc.o'
-+
-+  mimalloc_ldflags = [ '' + MIMALLOC_LIB ]
-+
-+  return mimalloc_ldflags
- 
- def DownloadRPMalloc():
-   """Download rpmalloc."""
-@@ -692,9 +754,6 @@ def main():
+@@ -686,9 +700,6 @@ def main():
    parser.add_argument('--with-android', type=gn_arg, nargs='?', const=True,
                        help='build the Android ASan runtime (linux only)',
                        default=sys.platform.startswith('linux'))
@@ -111,7 +49,16 @@ index 6d57def43567e..461cb2a1db4bc 100755
    parser.add_argument('--with-fuchsia',
                        type=gn_arg,
                        nargs='?',
-@@ -721,8 +780,14 @@ def main():
+@@ -705,17 +716,16 @@ def main():
+   parser.add_argument('--with-ccache',
+                       action='store_true',
+                       help='Use ccache to build the stage 1 compiler')
+-  parser.add_argument('--without-zstd',
+-                      dest='with_zstd',
+-                      action='store_false',
+-                      help='Disable zstd in the build')
+ 
+   args = parser.parse_args()
  
    global CLANG_REVISION, PACKAGE_VERSION, LLVM_BUILD_DIR
  
@@ -122,13 +69,10 @@ index 6d57def43567e..461cb2a1db4bc 100755
 +    return 1
 +  if not args.bootstrap:
 +    print('Customized build script requires --bootstrap')
-+    return 1
-+  if args.with_goma:
-+    print('Customized build script does not support --with-goma')
      return 1
    if args.with_android and not os.path.exists(ANDROID_NDK_DIR):
      print('Android NDK not found at ' + ANDROID_NDK_DIR)
-@@ -804,17 +869,12 @@ def main():
+@@ -797,17 +807,12 @@ def main():
    # LLVM_ENABLE_LLD).
    cc, cxx, lld = None, None, None
  
@@ -151,7 +95,7 @@ index 6d57def43567e..461cb2a1db4bc 100755
  
    base_cmake_args = [
        '-GNinja',
-@@ -823,7 +883,7 @@ def main():
+@@ -816,7 +821,7 @@ def main():
        '-DLLVM_ENABLE_PROJECTS=' + projects,
        '-DLLVM_ENABLE_RUNTIMES=compiler-rt',
        '-DLLVM_TARGETS_TO_BUILD=' + targets,
@@ -160,29 +104,48 @@ index 6d57def43567e..461cb2a1db4bc 100755
        '-DLLVM_ENABLE_TERMINFO=OFF',
        '-DLLVM_ENABLE_Z3_SOLVER=OFF',
        '-DCLANG_PLUGIN_SUPPORT=OFF',
-@@ -923,6 +983,10 @@ def main():
-     base_cmake_args.append('-DLLVM_WINSYSROOT="%s"' %
-                            os.path.dirname(os.path.dirname(GetWinSDKDir())))
+@@ -841,7 +846,7 @@ def main():
+       # `bootstrap` tool:
+       # https://github.com/rust-lang/rust/blob/021861aea8de20c76c7411eb8ada7e8235e3d9b5/src/bootstrap/src/core/build_steps/llvm.rs#L348
+       '-DLLVM_INSTALL_UTILS=ON',
+-      '-DLLVM_ENABLE_ZSTD=%s' % ('ON' if args.with_zstd else 'OFF'),
++      '-DLLVM_ENABLE_ZSTD=ON'
+   ]
  
-+  #Build mimalloc
-+  libmimalloc_ldflags = BuildLibMimalloc()
-+  ldflags += libmimalloc_ldflags
-+
-   # Statically link libxml2 to make lld-link not require mt.exe on Windows,
-   # and to make sure lld-link output on other platforms is identical to
-   # lld-link on Windows (for cross-builds).
-@@ -1021,8 +1085,8 @@ def main():
+   if sys.platform == 'darwin':
+@@ -918,12 +923,12 @@ def main():
+   cflags += libxml_cflags
+   cxxflags += libxml_cflags
+ 
+-  if args.with_zstd:
+-    # Statically link zstd to make lld support zstd compression for debug info.
+-    zstd_cmake_args, zstd_cflags = BuildZStd()
+-    base_cmake_args += zstd_cmake_args
+-    cflags += zstd_cflags
+-    cxxflags += zstd_cflags
++  
++  # Statically link zstd to make lld support zstd compression for debug info.
++  zstd_cmake_args, zstd_cflags = BuildZStd()
++  base_cmake_args += zstd_cmake_args
++  cflags += zstd_cflags
++  cxxflags += zstd_cflags
+ 
+   lit_excludes = []
+   if sys.platform.startswith('linux'):
+@@ -1040,9 +1045,9 @@ def main():
+     cxxflags += ['-Wno-backend-plugin']
  
      instrument_args = base_cmake_args + [
-         '-DLLVM_ENABLE_PROJECTS=clang',
+-        '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
++        '-DLLVM_ENABLE_PROJECTS=clang;polly',
 +        '-DCMAKE_C_FLAGS=-mllvm -vp-counters-per-site=3 ' + ' '.join(cflags),
 +        '-DCMAKE_CXX_FLAGS=-mllvm -vp-counters-per-site=3 ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1065,8 +1129,10 @@ def main():
+@@ -1085,8 +1090,11 @@ def main():
      with open(training_source, 'wb') as f:
        DownloadUrl(CDS_URL + '/' + training_source, f)
      train_cmd = [os.path.join(LLVM_INSTRUMENTED_DIR, 'bin', 'clang++'),
@@ -191,11 +154,12 @@ index 6d57def43567e..461cb2a1db4bc 100755
 +                 '-target', 'x86_64-unknown-unknown', '-O3', '-g', '-std=c++20',
 +                 '-march=x86-64-v3', '-ffp-contract=fast', '-fmerge-all-constants',
 +                 '-fdata-sections', '-ffunction-sections', '-fno-exceptions',
-+                 '-fno-rtti', '-w', '-c', training_source]
++                 '-fno-rtti', '-mllvm', '-polly', '-Rpass-analysis=polly',
++                 '-w', '-c', training_source]
      if sys.platform == 'darwin':
        train_cmd.extend(['-isysroot', isysroot])
      RunCommand(train_cmd, setenv=True)
-@@ -1116,11 +1182,6 @@ def main():
+@@ -1138,11 +1146,6 @@ def main():
    if lld is not None: base_cmake_args.append('-DCMAKE_LINKER=' + lld)
    final_install_dir = args.install_dir if args.install_dir else LLVM_BUILD_DIR
    cmake_args = base_cmake_args + [
@@ -207,48 +171,48 @@ index 6d57def43567e..461cb2a1db4bc 100755
        '-DCMAKE_INSTALL_PREFIX=' + final_install_dir,
    ]
    if not args.no_tools:
-@@ -1130,10 +1191,36 @@ def main():
+@@ -1152,10 +1155,36 @@ def main():
          os.path.join(CHROMIUM_DIR, 'tools', 'clang'),
          '-DCHROMIUM_TOOLS=%s' % ';'.join(chrome_tools)
      ])
 -  if args.pgo:
 +  if args.pgo and not args.thinlto:
-+    cmake_args.append('-DLLVM_PROFDATA_FILE=-mllvm -enable-ext-tsp-block-placement ' + LLVM_PROFDATA_FILE)
-+    cmake_args.append('-DCMAKE_C_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-mllvm -enable-ext-tsp-block-placement ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DLLVM_PROFDATA_FILE=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections ' + LLVM_PROFDATA_FILE)
++    cmake_args.append('-DCMAKE_C_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections  ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-funique-section-names -fseparate-named-sections -fsplit-machine-functions -mllvm -enable-ext-tsp-block-placement -fdata-sections -ffunction-sections  ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
 +  if args.thinlto and not args.pgo:
 +    cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append('-DLLVM_PARALLEL_LINK_JOBS=16')
-+    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -fdata-sections -ffunction-sections  ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -fdata-sections -ffunction-sections  ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
 +  if args.thinlto and args.pgo:
      cmake_args.append('-DLLVM_PROFDATA_FILE=' + LLVM_PROFDATA_FILE)
 -  if args.thinlto:
      cmake_args.append('-DLLVM_ENABLE_LTO=Thin')
 +    cmake_args.append('-DLLVM_PARALLEL_LINK_JOBS=16')
-+    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit ' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=30 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections -fdata-sections -ffunction-sections  ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-flto=thin -fwhole-program-vtables -fsplit-lto-unit -funique-section-names -fseparate-named-sections -fdata-sections -ffunction-sections  ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-flto=thin -fwhole-program-vtables -Wl,--lto-O3 -Wl,--lto-CGO3 -Wl,-mllvm,-import-instr-limit=5 -Wl,-mllvm,-enable-ext-tsp-block-placement -Wl,-z,keep-text-section-prefix -Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
 +  else:
-+    cmake_args.append('-DCMAKE_C_FLAGS=' + ' '.join(cflags))
-+    cmake_args.append('-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags))
-+    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags))
-+    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_C_FLAGS=-fdata-sections -ffunction-sections  ' + ' '.join(cflags))
++    cmake_args.append('-DCMAKE_CXX_FLAGS=-fdata-sections -ffunction-sections ' + ' '.join(cxxflags))
++    cmake_args.append('-DCMAKE_EXE_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
++    cmake_args.append('-DCMAKE_MODULE_LINKER_FLAGS=-Wl,-O2 -Wl,--gc-sections ' + ' '.join(ldflags))
    if sys.platform == 'win32':
      cmake_args.append('-DLLVM_ENABLE_ZLIB=FORCE_ON')
  
-@@ -1180,6 +1267,11 @@ def main():
+@@ -1202,6 +1231,11 @@ def main():
              'CMAKE_SYSROOT=%s' % sysroot_i386,
-             # TODO(https://crbug.com/1374690): pass proper flags to i386 tests so they compile correctly
+             # TODO(crbug.com/40242553): pass proper flags to i386 tests so they compile correctly
              'LLVM_INCLUDE_TESTS=OFF',
 +            'CMAKE_C_FLAGS=-O3 -march=x86-64-v3 -w ',
 +            'CMAKE_CXX_FLAGS=-O3 -march=x86-64-v3 -w ',
@@ -258,7 +222,7 @@ index 6d57def43567e..461cb2a1db4bc 100755
          ],
          "profile":
          True,
-@@ -1189,6 +1281,11 @@ def main():
+@@ -1211,6 +1245,11 @@ def main():
      runtimes_triples_args['x86_64-unknown-linux-gnu'] = {
          "args": [
              'CMAKE_SYSROOT=%s' % sysroot_amd64,
@@ -270,15 +234,7 @@ index 6d57def43567e..461cb2a1db4bc 100755
          ],
          "profile": True,
          "sanitizers": True,
-@@ -1308,7 +1405,6 @@ def main():
-           'CMAKE_BUILD_TYPE=RelWithDebInfo',
-           'CMAKE_C_FLAGS=' + ' '.join(android_cflags),
-           'CMAKE_CXX_FLAGS=' + ' '.join(android_cflags),
--          'CMAKE_ASM_FLAGS=' + ' '.join(android_cflags),
-           'COMPILER_RT_USE_BUILTINS_LIBRARY=ON',
-           'SANITIZER_CXX_ABI=libcxxabi',
-           'CMAKE_SHARED_LINKER_FLAGS=-Wl,-u__cxa_demangle',
-@@ -1438,8 +1534,8 @@ def main():
+@@ -1459,8 +1498,8 @@ def main():
      # Instrument.
      RunCommand([
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.inst',
@@ -289,18 +245,18 @@ index 6d57def43567e..461cb2a1db4bc 100755
          os.path.join(bolt_profiles_dir, 'prof.fdata')
      ])
      RunCommand([
-@@ -1454,8 +1550,8 @@ def main():
+@@ -1475,8 +1514,8 @@ def main():
      bolt_train_cmake_args = base_cmake_args + [
          '-DLLVM_TARGETS_TO_BUILD=X86',
          '-DLLVM_ENABLE_PROJECTS=clang',
 -        '-DCMAKE_C_FLAGS=' + ' '.join(cflags),
 -        '-DCMAKE_CXX_FLAGS=' + ' '.join(cxxflags),
-+        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants ' + ' '.join(cflags),
-+        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants ' + ' '.join(cxxflags),
+++        '-DCMAKE_C_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly ' + ' '.join(cflags),
+++        '-DCMAKE_CXX_FLAGS=-ffp-contract=fast -fmerge-all-constants -mllvm -polly -Rpass-analysis=polly ' + ' '.join(cxxflags),
          '-DCMAKE_EXE_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_SHARED_LINKER_FLAGS=' + ' '.join(ldflags),
          '-DCMAKE_MODULE_LINKER_FLAGS=' + ' '.join(ldflags),
-@@ -1485,7 +1581,12 @@ def main():
+@@ -1506,7 +1545,12 @@ def main():
          'bin/llvm-bolt', 'bin/clang', '-o', 'bin/clang-bolt.opt', '-data',
          'merged.fdata', '-reorder-blocks=ext-tsp', '-reorder-functions=hfsort+',
          '-split-functions', '-split-all-cold', '-split-eh', '-dyno-stats',
@@ -310,18 +266,43 @@ index 6d57def43567e..461cb2a1db4bc 100755
 +        '-jump-tables=aggressive', '-simplify-rodata-loads', '-align-macro-fusion=all',
 +        '-tail-duplication=cache', '-indirect-call-promotion=all', '-icp-eliminate-loads',
 +        '-hot-data', '-x86-strip-redundant-address-size', '-reorder-functions-use-hot-size',
-+        '-reorder-data-algo=funcs', '-lite=false',
++        '-reorder-data-algo=funcs', '--use-old-text', '-lite=false',
      ])
  
      # Overwrite clang, preserving its timestamp so ninja doesn't rebuild it.
-@@ -1527,6 +1628,10 @@ def main():
+@@ -1520,22 +1564,25 @@ def main():
+     VerifyZStdSupport()
+ 
+   # Run tests.
+-  if (chrome_tools and not args.build_mac_arm and
+-      (args.run_tests or args.llvm_force_head_revision)):
+-    RunCommand(['ninja', '-C', LLVM_BUILD_DIR, 'cr-check-all'], setenv=True)
++  # if (chrome_tools and not args.build_mac_arm and
++  #     (args.run_tests or args.llvm_force_head_revision)):
++  #   RunCommand(['ninja', '-C', LLVM_BUILD_DIR, 'cr-check-all'], setenv=True)
+ 
+-  if not args.build_mac_arm and args.run_tests:
+-    RunCommand(['ninja', '-C', LLVM_BUILD_DIR, 'check-all'],
+-               env=test_env,
+-               setenv=True)
+-  if args.install_dir:
+-    RunCommand(['ninja', 'install'], setenv=True)
++  # if not args.build_mac_arm and args.run_tests:
++  #   RunCommand(['ninja', '-C', LLVM_BUILD_DIR, 'check-all'],
++  #              env=test_env,
++  #              setenv=True)
++  # if args.install_dir:
++  #   RunCommand(['ninja', 'install'], setenv=True)
  
    WriteStampFile(PACKAGE_VERSION, STAMP_FILE)
    WriteStampFile(PACKAGE_VERSION, FORCE_HEAD_REVISION_FILE)
-+
++  
 +  RunCommand(['ln', '--symbolic', '--relative', '-f', 'bin/clang', 'bin/clang++'])
 +  RunCommand(['ln', '--symbolic', '--relative', '-f', 'bin/clang', 'bin/clang-cl'])
-+
++  
    print('Clang build was successful.')
    return 0
  
+-
+ if __name__ == '__main__':
+   sys.exit(main())
