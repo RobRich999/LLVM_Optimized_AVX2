@@ -14,7 +14,7 @@ LLVM is built with -march=x86-64-v3 and other optimizations. Optimizations have 
 
 Usage example from the /chromium/src directory:
 
-> vpython3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
+> python3 tools/clang/scripts/build.py --bootstrap --without-android --without-fuchsia --disable-asserts --thinlto --pgo --bolt --llvm-force-head-revision
 
 Building LLVM with ThinLTO, PGO, and BOLT optimizations are optional. Regardless, LLLVM still builds with optimizations for -O3, AVX2, etc.
 
