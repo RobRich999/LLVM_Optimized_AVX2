@@ -24,7 +24,7 @@ PGO and BOLT tend to not be too LLVM build time intensive for a relatively fast 
 
 **Note regarding Windows cross-building:**
 
-If cross-building Windows binaries, the LLVM lib/clang/20/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
+If cross-building Windows binaries, the LLVM lib/clang/21/lib/windows library files will need to be copied manually from the LLVM package bundled by Chromium.
 
 ****
 
